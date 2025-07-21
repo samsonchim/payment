@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'CourseRep Payments',
-  description: 'A payment management app for course representatives.',
+  title: 'Payment Confirmation',
+  description: 'A payment management app for csc students for self payment confirmation.',
   manifest: "/manifest.json",
 };
 
