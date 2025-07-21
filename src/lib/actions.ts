@@ -126,6 +126,7 @@ export async function getTransactions(): Promise<Transaction[]> {
   }
   
   return (data || []).map(t => ({
+      id: t.id,
       studentName: t.student_name, 
       regNumber: t.reg_number,
       textbookName: t.name,
@@ -150,6 +151,7 @@ export async function getStudentTransactions(regNumber: string): Promise<Transac
   }
 
   return (data || []).map(t => ({
+      id: t.id,
       studentName: t.student_name,
       regNumber: t.reg_number,
       textbookName: t.name,
@@ -174,6 +176,27 @@ export async function getStudents(): Promise<Student[]> {
     regNumber: s.reg_number,
     name: s.name,
   }));
+}
+
+export async function deleteTransaction(transactionId: string) {
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from('records')
+      .delete()
+      .eq('id', transactionId);
+
+    if (error) {
+      console.error('Error deleting transaction:', error);
+      return { error: 'Failed to delete transaction.' };
+    }
+
+    revalidatePath('/admin/dashboard');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete transaction error:', error);
+    return { error: 'An unexpected error occurred.' };
+  }
 }
 
 

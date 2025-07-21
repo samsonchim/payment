@@ -11,6 +11,7 @@ export interface Textbook {
 }
 
 export interface Transaction {
+  id: string;
   studentName: string;
   regNumber: string;
   textbookName: string; 

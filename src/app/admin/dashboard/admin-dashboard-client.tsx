@@ -12,9 +12,10 @@ import { FileDown, PlusCircle, Trash2, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { addTextbook, deleteTextbook, updateTextbook } from '@/lib/actions';
+import { addTextbook, deleteTextbook, updateTextbook, deleteTransaction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const TextbookForm = ({ textbook, onDone }: { textbook?: Textbook, onDone: () => void }) => {
     const action = textbook ? updateTextbook : addTextbook;
@@ -69,6 +70,8 @@ export function AdminDashboardClient({
   const [students, setStudents] = useState(initialStudents);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTextbook, setEditingTextbook] = useState<Textbook | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -108,8 +111,30 @@ export function AdminDashboardClient({
     }
   }
 
+  const handleDeleteTransaction = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+    setDeleteDialogOpen(true);
+  }
+
+  const confirmDeleteTransaction = async () => {
+    if (!transactionToDelete) return;
+
+    const result = await deleteTransaction(transactionToDelete.id);
+    if (result.error) {
+      toast({ variant: 'destructive', title: 'Error', description: result.error });
+    } else {
+      setTransactions(prev => prev.filter(t => t.id !== transactionToDelete.id));
+      toast({ title: 'Transaction deleted successfully' });
+      router.refresh();
+    }
+
+    setDeleteDialogOpen(false);
+    setTransactionToDelete(null);
+  }
+
   return (
-    <Tabs defaultValue="textbooks">
+    <>
+      <Tabs defaultValue="textbooks">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="textbooks">Manage Textbooks</TabsTrigger>
         <TabsTrigger value="transactions">Payment Records</TabsTrigger>
@@ -192,22 +217,33 @@ export function AdminDashboardClient({
                           <TableHead>Textbook</TableHead>
                           <TableHead className="text-right">Amount Paid</TableHead>
                           <TableHead className="text-right">Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                   </TableHeader>
                   <TableBody>
                       {transactions.length > 0 ? (
                           transactions.map((t, i) => (
-                              <TableRow key={i}>
+                              <TableRow key={t.id}>
                                   <TableCell>{t.studentName}</TableCell>
                                   <TableCell>{t.regNumber}</TableCell>
                                   <TableCell>{t.textbookName}</TableCell>
                                   <TableCell className="text-right">₦{t.totalAmount.toLocaleString()}</TableCell>
-                                   <TableCell className="text-right">{formatDate(t.date)}</TableCell>
+                                  <TableCell className="text-right">{formatDate(t.date)}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={() => handleDeleteTransaction(t)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
                               </TableRow>
                           ))
                       ) : (
                           <TableRow>
-                              <TableCell colSpan={5} className="text-center">No transactions yet.</TableCell>
+                              <TableCell colSpan={6} className="text-center">No transactions yet.</TableCell>
                           </TableRow>
                       )}
                   </TableBody>
@@ -242,5 +278,36 @@ export function AdminDashboardClient({
         </Card>
       </TabsContent>
     </Tabs>
+    
+    {/* Delete Transaction Confirmation Dialog */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this payment record?
+            {transactionToDelete && (
+              <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                <strong>Student:</strong> {transactionToDelete.studentName}<br/>
+                <strong>Registration:</strong> {transactionToDelete.regNumber}<br/>
+                <strong>Textbook:</strong> {transactionToDelete.textbookName}<br/>
+                <strong>Amount:</strong> ₦{transactionToDelete.totalAmount.toLocaleString()}
+              </div>
+            )}
+            This action cannot be undone and will permanently remove this transaction record from the database.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={confirmDeleteTransaction}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Delete Transaction
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
