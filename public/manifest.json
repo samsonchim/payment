@@ -1,0 +1,21 @@
+{
+  "name": "CourseRep Payments",
+  "short_name": "CourseRep Pay",
+  "description": "A payment management app for course representatives.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EFEFEF",
+  "theme_color": "#478E8B",
+  "icons": [
+    {
+      "src": "https://paytsoftware.nl/wp-content/uploads/2020/09/iStock-2078490118-400x500.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://paytsoftware.nl/wp-content/uploads/2020/09/iStock-2078490118-400x500.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

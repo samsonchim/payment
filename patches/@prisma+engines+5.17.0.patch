@@ -1,0 +1,13 @@
+diff --git a/node_modules/@prisma/engines/package.json b/node_modules/@prisma/engines/package.json
+index 6db8d6b..00a2933 100644
+--- a/node_modules/@prisma/engines/package.json
++++ b/node_modules/@prisma/engines/package.json
+@@ -6,6 +6,7 @@
+   "main": "dist/index.js",
+   "types": "dist/index.d.ts",
+   "author": "Tim Suchanek <suchanek@prisma.io>",
++  "prisma": {"libssl": "3.0.x"},
+   "license": "Apache-2.0",
+   "engines": {
+     "node": ">=18.0.0"
+
