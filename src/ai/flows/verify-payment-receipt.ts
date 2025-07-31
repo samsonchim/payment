@@ -42,7 +42,7 @@ You will receive an image of a payment receipt, the expected payment amount, and
 
 For the payment to be approved, ALL of the following conditions MUST be met:
 1. The amount paid on the receipt must be equal to or GREATER THAN the expected amount. If it is less than the expected amount, you must reject it. Any amount paid over the expected amount is considered a tip.
-2. The recipient's bank name MUST be "Moniepoint".
+2. The recipient's bank name MUST be "Moniepoint" or "Moniepoint Microfinance Bank" or "Moniepoint MFB".
 3. The recipient's name MUST be EXACTLY "Chimaraoke Samson" or "Samson Chimaraoke". No other variations or additional names are acceptable. The order of the first and last name does not matter.
 
 If any of these conditions are not met, you must reject the payment. DO NOT check the account number.
