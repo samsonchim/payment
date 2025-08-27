@@ -194,9 +194,9 @@ export function DashboardClient({ student, textbooks, transactions }: { student:
                         <AlertDescription>
                             Please transfer <strong>₦{totalAmount.toLocaleString()}</strong> to the account below:
                             <ul className="mt-2 list-none space-y-1">
-                                <li><strong>Bank:</strong> Moniepoint</li>
-                                <li><strong>Account Number:</strong> 9162035539</li>
-                                <li><strong>Account Name:</strong> Chimaraoke Samson</li>
+                                <li><strong>Bank:</strong> Opay</li>
+                                <li><strong>Account Number:</strong> 7065136040</li>
+                                <li><strong>Account Name:</strong> Mmegwa Uzonna Anthony</li>
                             </ul>
                         </AlertDescription>
                     </Alert>
