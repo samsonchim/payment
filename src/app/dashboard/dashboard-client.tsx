@@ -155,9 +155,16 @@ async function downloadReceiptAsPng(receiptRef: React.RefObject<HTMLDivElement>,
                   </div>
                   <Button
                     size="sm"
-                    return (
-                      <div className="grid gap-8 lg:grid-cols-3">
-                        <div className="lg:col-span-2 space-y-8">
+                    variant="outline"
+                    onClick={() => addToCart(book)}
+                    disabled={!!cart.find(i => i.id === book.id) || paidForTextbooks.has(book.name)}
+                  >
+                    {cart.find(i => i.id === book.id) 
+                      ? 'In Cart' 
+                      : paidForTextbooks.has(book.name)
+                        ? 'Paid'
+                        : 'Add to Cart'}
+                  </Button>
                           <Card>
                             <CardHeader>
                               <CardTitle>Available Textbooks</CardTitle>
