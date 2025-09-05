@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,11 +15,58 @@ import { ShoppingCart, CheckCircle, XCircle, Loader2, Info, History } from 'luci
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useRouter } from 'next/navigation';
 
-export function DashboardClient({ student, textbooks, transactions }: { student: Student; textbooks: Textbook[], transactions: Transaction[] }) {
+// For PNG receipt generation
+import html2canvas from 'html2canvas';
+
+function ReceiptContent({ userName, items, total }) {
+  return (
+    <div id="receipt-content" style={{ background: '#fff', padding: 24, fontFamily: 'Arial', width: 400 }}>
+      <h1 style={{ textAlign: 'center', fontSize: 24, marginBottom: 16 }}>CLASS of CHAMPIONS 2023</h1>
+      <p><strong>Name:</strong> {userName}</p>
+      <table style={{ width: '100%', borderCollapse: 'collapse', margin: '24px 0' }}>
+        <thead>
+          <tr>
+            <th style={{ border: '1px solid #ddd', padding: 8 }}>Item</th>
+            <th style={{ border: '1px solid #ddd', padding: 8 }}>Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map(item => (
+            <tr key={item.id}>
+              <td style={{ border: '1px solid #ddd', padding: 8 }}>{item.name}</td>
+              <td style={{ border: '1px solid #ddd', padding: 8 }}>₦{item.price.toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td style={{ border: '1px solid #ddd', padding: 8, fontWeight: 'bold' }}>Total</td>
+            <td style={{ border: '1px solid #ddd', padding: 8, fontWeight: 'bold' }}>₦{total.toLocaleString()}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style={{ textAlign: 'center', marginTop: 32, fontSize: 14, color: '#888' }}>by Samson Chi</div>
+    </div>
+  );
+}
+
+async function downloadReceiptAsPng(receiptRef, userName) {
+  if (!receiptRef.current) return;
+  const canvas = await html2canvas(receiptRef.current);
+  const url = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `receipt-${userName}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
   const [cart, setCart] = useState<Textbook[]>([]);
   const [receiptDataUri, setReceiptDataUri] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{ isApproved: boolean; reason: string } | null>(null);
+  const [showDownload, setShowDownload] = useState(false);
+  const receiptRef = useRef(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -69,18 +116,11 @@ export function DashboardClient({ student, textbooks, transactions }: { student:
     const result = await verifyAndRecordPayment(cart, receiptDataUri);
 
     if (result.isApproved) {
-        setVerificationResult({
-            isApproved: true,
-            reason: "Payment verified successfully! Please send a screenshot of your receipt to Samson's WhatsApp. Your dashboard will reset shortly."
-        });
-
-        // Wait a few seconds before resetting the state so the user can read the message
-        setTimeout(() => {
-            setCart([]);
-            setReceiptDataUri(null);
-            setVerificationResult(null);
-            router.refresh(); 
-        }, 5000); 
+    setVerificationResult({
+      isApproved: true,
+      reason: "Payment verified successfully! You can now download your receipt. Please send a screenshot of your receipt to Samson's WhatsApp."
+    });
+  setShowDownload(true);
 
     } else {
         setVerificationResult(result);
@@ -212,11 +252,29 @@ export function DashboardClient({ student, textbooks, transactions }: { student:
                 </div>
                 
                 {verificationResult && (
-                  <Alert variant={verificationResult.isApproved ? 'default' : 'destructive'} className={verificationResult.isApproved ? 'border-green-500' : ''}>
-                    {verificationResult.isApproved ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                    <AlertTitle>{verificationResult.isApproved ? 'Payment Approved' : 'Payment Rejected'}</AlertTitle>
-                    <AlertDescription>{verificationResult.reason}</AlertDescription>
-                  </Alert>
+                  <>
+                    <Alert variant={verificationResult.isApproved ? 'default' : 'destructive'} className={verificationResult.isApproved ? 'border-green-500' : ''}>
+                      {verificationResult.isApproved ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                      <AlertTitle>{verificationResult.isApproved ? 'Payment Approved' : 'Payment Rejected'}</AlertTitle>
+                      <AlertDescription>{verificationResult.reason}</AlertDescription>
+                    </Alert>
+                    {verificationResult.isApproved && showDownload && (
+                      <div style={{ marginTop: 24, textAlign: 'center' }}>
+                        {/* Hidden receipt for PNG rendering */}
+                        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+                          <div ref={receiptRef}>
+                            <ReceiptContent userName={student?.name || 'User'} items={cart} total={totalAmount} />
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => downloadReceiptAsPng(receiptRef, student?.name || 'User')}
+                          className="mt-2"
+                        >
+                          Download Receipt (PNG)
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

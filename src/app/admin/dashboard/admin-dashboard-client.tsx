@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Student, Textbook, Transaction } from '@/lib/data';
-import { FileDown, PlusCircle, Trash2, Edit } from 'lucide-react';
+import { FileDown, PlusCircle, Trash2, Edit, CheckCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,7 +56,32 @@ const TextbookForm = ({ textbook, onDone }: { textbook?: Textbook, onDone: () =>
     );
 };
 
-export function AdminDashboardClient({
+// Helper for collection state
+function CollectionDialog({ open, onOpenChange, onConfirm }) {
+  const [collector, setCollector] = useState('');
+  const [bySelf, setBySelf] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm Collection</DialogTitle>
+          <DialogDescription>Enter who collected the textbook or tick 'Collect by self'.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="collector">Collector Name</Label>
+          <Input id="collector" value={collector} onChange={e => setCollector(e.target.value)} disabled={bySelf} />
+          <div className="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="bySelf" checked={bySelf} onChange={e => setBySelf(e.target.checked)} />
+            <Label htmlFor="bySelf">Collect by self</Label>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onConfirm(bySelf ? 'Self' : collector)} disabled={!bySelf && !collector}>Confirm</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
   initialTextbooks,
   initialTransactions,
   initialStudents,
@@ -69,6 +94,9 @@ export function AdminDashboardClient({
   const [transactions, setTransactions] = useState(initialTransactions);
   const [students, setStudents] = useState(initialStudents);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
+  const [collectingBookId, setCollectingBookId] = useState<string | null>(null);
+  const [collected, setCollected] = useState<Record<string, { by: string, date: string }>>({});
   const [editingTextbook, setEditingTextbook] = useState<Textbook | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
@@ -132,6 +160,23 @@ export function AdminDashboardClient({
     setTransactionToDelete(null);
   }
 
+  const handleCollect = (bookId: string) => {
+    setCollectingBookId(bookId);
+    setCollectionDialogOpen(true);
+  };
+
+  const confirmCollect = (collector: string) => {
+    if (collectingBookId) {
+      setCollected(prev => ({
+        ...prev,
+        [collectingBookId]: { by: collector, date: new Date().toISOString() }
+      }));
+    }
+    setCollectionDialogOpen(false);
+    setCollectingBookId(null);
+    toast({ title: 'Textbook marked as collected.' });
+  };
+
   return (
     <>
       <Tabs defaultValue="textbooks">
@@ -171,6 +216,7 @@ export function AdminDashboardClient({
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-center">Collected</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -179,7 +225,20 @@ export function AdminDashboardClient({
                   <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.name}</TableCell>
                     <TableCell className="text-right">₦{book.price.toLocaleString()}</TableCell>
-                     <TableCell className="text-right">
+                    <TableCell className="text-center">
+                      {collected[book.id] ? (
+                        <span className="flex flex-col items-center text-green-600">
+                          <CheckCircle className="h-4 w-4 mb-1" />
+                          <span className="text-xs">{collected[book.id].by}</span>
+                          <span className="text-xs">{new Date(collected[book.id].date).toLocaleDateString()}</span>
+                        </span>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => handleCollect(book.id)}>
+                          Collect
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
                          <Button variant="ghost" size="icon" onClick={() => { setEditingTextbook(book); setDialogOpen(true); }}>
                              <Edit className="h-4 w-4" />
                          </Button>
@@ -191,6 +250,7 @@ export function AdminDashboardClient({
                 ))}
               </TableBody>
             </Table>
+            <CollectionDialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen} onConfirm={confirmCollect} />
           </CardContent>
         </Card>
       </TabsContent>
