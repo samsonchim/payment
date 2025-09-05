@@ -16,9 +16,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useRouter } from 'next/navigation';
 
 // For PNG receipt generation
+// @ts-ignore
 import html2canvas from 'html2canvas';
 
-function ReceiptContent({ userName, items, total }) {
+interface ReceiptContentProps {
+  userName: string;
+  items: { id: string; name: string; price: number }[];
+  total: number;
+}
+function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
   return (
     <div id="receipt-content" style={{ background: '#fff', padding: 24, fontFamily: 'Arial', width: 400 }}>
       <h1 style={{ textAlign: 'center', fontSize: 24, marginBottom: 16 }}>CLASS of CHAMPIONS 2023</h1>
@@ -31,7 +37,7 @@ function ReceiptContent({ userName, items, total }) {
           </tr>
         </thead>
         <tbody>
-          {items.map(item => (
+          {items.map((item: { id: string; name: string; price: number }) => (
             <tr key={item.id}>
               <td style={{ border: '1px solid #ddd', padding: 8 }}>{item.name}</td>
               <td style={{ border: '1px solid #ddd', padding: 8 }}>₦{item.price.toLocaleString()}</td>
@@ -50,7 +56,7 @@ function ReceiptContent({ userName, items, total }) {
   );
 }
 
-async function downloadReceiptAsPng(receiptRef, userName) {
+async function downloadReceiptAsPng(receiptRef: React.RefObject<HTMLDivElement>, userName: string) {
   if (!receiptRef.current) return;
   const canvas = await html2canvas(receiptRef.current);
   const url = canvas.toDataURL('image/png');
@@ -129,7 +135,7 @@ async function downloadReceiptAsPng(receiptRef, userName) {
     setIsVerifying(false);
   };
   
-  const paidForTextbooks = new Set(transactions.map(t => t.textbookName));
+  const paidForTextbooks = new Set((transactions || []).map((t: { textbookName: string }) => t.textbookName));
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
@@ -149,45 +155,45 @@ async function downloadReceiptAsPng(receiptRef, userName) {
                   </div>
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={() => addToCart(book)}
-                    disabled={!!cart.find(i => i.id === book.id) || paidForTextbooks.has(book.name)}
-                  >
-                    {cart.find(i => i.id === book.id) 
-                      ? 'In Cart' 
-                      : paidForTextbooks.has(book.name)
-                        ? 'Paid'
-                        : 'Add to Cart'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </CardContent>
-        </Card>
-
-        {transactions.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                  <History className="h-6 w-6" /> Payment History
-              </CardTitle>
-              <CardDescription>A record of your past payments.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Textbook</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.map((t, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{formatDate(t.date)}</TableCell>
-                      <TableCell>{t.textbookName}</TableCell>
-                      <TableCell className="text-right">₦{t.totalAmount.toLocaleString()}</TableCell>
+                    return (
+                      <div className="grid gap-8 lg:grid-cols-3">
+                        <div className="lg:col-span-2 space-y-8">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Available Textbooks</CardTitle>
+                              <CardDescription>Select the textbooks you wish to pay for.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 md:grid-cols-2">
+                              {textbooks.map((book: { id: string; name: string; price: number }) => (
+                                <Card key={book.id}>
+                                  <CardContent className="p-4 flex justify-between items-center">
+                                    <div>
+                                      <p className="font-medium">{book.name}</p>
+                                      <p className="text-muted-foreground">₦{book.price.toLocaleString()}</p>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => addToCart(book)}
+                                      disabled={!!cart.find((i: { id: string }) => i.id === book.id) || paidForTextbooks.has(book.name)}
+                                    >
+                                      {cart.find((i: { id: string }) => i.id === book.id) 
+                                        ? 'In Cart' 
+                                        : paidForTextbooks.has(book.name)
+                                          ? 'Paid'
+                                          : 'Add to Cart'}
+                                    </Button>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </CardContent>
+                          </Card>
+                          {/* ...existing code... */}
+                        </div>
+                        {/* ...existing code... */}
+                      </div>
+                    );
+                  }
                     </TableRow>
                   ))}
                 </TableBody>
