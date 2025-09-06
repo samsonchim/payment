@@ -25,13 +25,16 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <meta name="theme-color" content="#478E8B" />
       </head>
-      <body className={`${inter.variable} font-body antialiased h-full bg-background flex flex-col min-h-screen`}>
-        <div className="flex-1">
-          {children}
+      <body className={`${inter.variable} font-body antialiased h-full bg-background`}>
+        <div className="min-h-screen flex flex-col">
+          <div className="flex-1">
+            {children}
+          </div>
+          <footer className="sticky bottom-0 w-full text-center py-3 text-xs sm:text-sm text-muted-foreground border-t bg-background/80 backdrop-blur-sm">
+            By <a href="https://github.com/samsonchim/" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-primary transition-colors">Samson Chi</a>
+          </footer>
         </div>
-        <footer className="w-full text-center py-4 text-sm text-muted-foreground border-t mt-8">
-          By Samson Chi, github link <a href="https://github.com/samsonchim/" target="_blank" rel="noopener noreferrer" className="underline">https://github.com/samsonchim/</a>
-        </footer>
+        <Toaster />
         <Toaster />
       </body>
     </html>

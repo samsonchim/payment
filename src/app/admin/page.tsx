@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { loginAdmin } from '@/lib/actions';
 import { AppLogo } from '@/components/icons';
+import { Preloader } from '@/components/preloader';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -26,6 +27,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [state, formAction] = useActionState(loginAdmin, null);
+  const [showPreloader, setShowPreloader] = useState(true);
 
   useEffect(() => {
     if (state?.success) {
@@ -43,6 +45,14 @@ export default function AdminLoginPage() {
       });
     }
   }, [state, router, toast]);
+
+  const handlePreloaderComplete = () => {
+    setShowPreloader(false);
+  };
+
+  if (showPreloader) {
+    return <Preloader onComplete={handlePreloaderComplete} duration={2500} />;
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">

@@ -28,12 +28,12 @@ interface ReceiptContentProps {
 function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
   return (
     <div id="receipt-content" style={{ 
-      background: '#fff', 
-      padding: 32, 
+      background: 'hsl(0, 0%, 94%)', 
+      padding: window.innerWidth < 640 ? 16 : 32, 
       fontFamily: 'Arial, sans-serif', 
-      width: 420, 
+      width: window.innerWidth < 640 ? 320 : 420, 
       position: 'relative',
-      border: '1px solid #e5e5e5',
+      border: '2px solid hsl(181, 39%, 45%)',
       borderRadius: '12px',
       overflow: 'hidden'
     }}>
@@ -44,7 +44,7 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         fontSize: '120px',
-        color: '#f0f9ff',
+        color: 'hsl(181, 39%, 85%)',
         zIndex: 0,
         opacity: 0.1
       }}>
@@ -52,18 +52,18 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
       </div>
 
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 24, position: 'relative', zIndex: 1 }}>
+      <div style={{ textAlign: 'center', marginBottom: window.innerWidth < 640 ? 16 : 24, position: 'relative', zIndex: 1 }}>
         <div style={{
-          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+          background: 'linear-gradient(135deg, hsl(181, 39%, 45%), hsl(181, 39%, 35%))',
           color: 'white',
-          padding: '12px 24px',
+          padding: window.innerWidth < 640 ? '8px 16px' : '12px 24px',
           borderRadius: '8px',
           margin: '0 auto 16px',
           display: 'inline-block',
-          fontSize: '20px',
+          fontSize: window.innerWidth < 640 ? '16px' : '20px',
           fontWeight: 'bold',
           letterSpacing: '1px',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+          boxShadow: '0 4px 12px hsla(181, 39%, 45%, 0.3)'
         }}>
           ⭐ CLASS OF CHAMPIONS 2025 ⭐
         </div>
@@ -72,28 +72,28 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
       {/* Amount */}
       <div style={{ 
         textAlign: 'center', 
-        marginBottom: 24,
+        marginBottom: window.innerWidth < 640 ? 16 : 24,
         position: 'relative',
         zIndex: 1
       }}>
         <div style={{ 
-          fontSize: '36px', 
+          fontSize: window.innerWidth < 640 ? '28px' : '36px', 
           fontWeight: 'bold', 
-          color: '#3b82f6',
+          color: 'hsl(181, 39%, 45%)',
           marginBottom: 8
         }}>
           ₦{total.toLocaleString()}
         </div>
         <div style={{ 
-          fontSize: '18px', 
-          color: '#16a34a',
+          fontSize: window.innerWidth < 640 ? '14px' : '18px', 
+          color: 'hsl(120, 60%, 35%)',
           fontWeight: '600'
         }}>
           Successful Transaction
         </div>
         <div style={{ 
-          fontSize: '14px', 
-          color: '#6b7280',
+          fontSize: window.innerWidth < 640 ? '12px' : '14px', 
+          color: 'hsl(181, 39%, 30%)',
           marginTop: 4
         }}>
           {new Date().toLocaleDateString('en-US', { 
@@ -114,16 +114,16 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
         zIndex: 1
       }}>
         <div style={{
-          background: '#f8fafc',
+          background: 'hsl(181, 39%, 90%)',
           padding: '16px',
           borderRadius: '8px',
-          border: '1px solid #e2e8f0'
+          border: '1px solid hsl(181, 39%, 75%)'
         }}>
           <div style={{ 
             fontSize: '16px', 
             fontWeight: 'bold', 
             marginBottom: 8,
-            color: '#1e293b'
+            color: 'hsl(181, 39%, 25%)'
           }}>
             Student: {userName}
           </div>
@@ -140,24 +140,24 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
           fontSize: '16px',
           fontWeight: 'bold',
           marginBottom: 12,
-          color: '#1e293b',
-          borderBottom: '2px solid #3b82f6',
+          color: 'hsl(181, 39%, 25%)',
+          borderBottom: '2px solid hsl(181, 39%, 45%)',
           paddingBottom: 8
         }}>
           Items Purchased:
         </div>
-        <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '6px' }}>
+        <div style={{ background: 'hsl(181, 39%, 90%)', padding: '12px', borderRadius: '6px' }}>
           {items.map((item: { id: string; name: string; price: number }) => (
             <div key={item.id} style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '8px 0',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: '1px solid hsl(181, 39%, 75%)',
               fontSize: '14px'
             }}>
-              <span style={{ fontWeight: '500', color: '#374151' }}>{item.name}</span>
-              <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>₦{item.price.toLocaleString()}</span>
+              <span style={{ fontWeight: '500', color: 'hsl(181, 39%, 30%)' }}>{item.name}</span>
+              <span style={{ fontWeight: 'bold', color: 'hsl(181, 39%, 45%)' }}>₦{item.price.toLocaleString()}</span>
             </div>
           ))}
           <div style={{
@@ -167,28 +167,28 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
             padding: '12px 0 8px',
             fontSize: '16px',
             fontWeight: 'bold',
-            color: '#1e293b'
+            color: 'hsl(181, 39%, 25%)'
           }}>
             <span>Total:</span>
-            <span style={{ color: '#3b82f6' }}>₦{total.toLocaleString()}</span>
+            <span style={{ color: 'hsl(181, 39%, 45%)' }}>₦{total.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Instructions */}
       <div style={{
-        background: 'linear-gradient(135deg, #fef3c7, #fbbf24)',
+        background: 'linear-gradient(135deg, hsl(181, 39%, 85%), hsl(181, 39%, 70%))',
         padding: '16px',
         borderRadius: '8px',
         marginBottom: 24,
-        border: '1px solid #f59e0b',
+        border: '1px solid hsl(181, 39%, 55%)',
         position: 'relative',
         zIndex: 1
       }}>
         <div style={{
           fontSize: '14px',
           fontWeight: 'bold',
-          color: '#92400e',
+          color: 'hsl(181, 39%, 25%)',
           marginBottom: 8,
           textAlign: 'center'
         }}>
@@ -196,7 +196,7 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
         </div>
         <div style={{
           fontSize: '13px',
-          color: '#92400e',
+          color: 'hsl(181, 39%, 25%)',
           textAlign: 'center',
           lineHeight: '1.4'
         }}>
@@ -208,15 +208,15 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
       <div style={{ 
         textAlign: 'center', 
         fontSize: '11px', 
-        color: '#6b7280',
-        borderTop: '1px solid #e5e7eb',
+        color: 'hsl(181, 39%, 30%)',
+        borderTop: '1px solid hsl(181, 39%, 75%)',
         paddingTop: 16,
         position: 'relative',
         zIndex: 1,
         lineHeight: '1.4'
       }}>
         <div style={{ marginBottom: 4 }}>
-          This Receipt was generated upon payment from <strong style={{ color: '#3b82f6' }}>Neon Payment</strong>
+          This Receipt was generated upon payment from <strong style={{ color: 'hsl(181, 39%, 45%)' }}>Neon Payment</strong>
         </div>
         <div style={{ fontSize: '10px' }}>
           Developer: <strong>Samson Chi</strong>
@@ -315,26 +315,27 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
   const paidForTextbooks = new Set((transactions || []).map((t: { textbookName: string }) => t.textbookName));
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3">
-      <div className="lg:col-span-2 space-y-8">
+    <div className="grid gap-4 sm:gap-6 md:gap-8 lg:grid-cols-3">
+      <div className="lg:col-span-2 space-y-4 sm:space-y-6 md:space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Available Textbooks</CardTitle>
-            <CardDescription>Select the textbooks you wish to pay for.</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Available Textbooks</CardTitle>
+            <CardDescription className="text-sm">Select the textbooks you wish to pay for.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-3 sm:gap-4 md:grid-cols-2">
             {textbooks.map(book => (
               <Card key={book.id}>
-                <CardContent className="p-4 flex justify-between items-center">
+                <CardContent className="p-3 sm:p-4 flex justify-between items-center">
                   <div>
-                    <p className="font-medium">{book.name}</p>
-                    <p className="text-muted-foreground">₦{book.price.toLocaleString()}</p>
+                    <p className="font-medium text-sm sm:text-base">{book.name}</p>
+                    <p className="text-muted-foreground text-xs sm:text-sm">₦{book.price.toLocaleString()}</p>
                   </div>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => addToCart(book)}
                     disabled={!!cart.find(i => i.id === book.id) || paidForTextbooks.has(book.name)}
+                    className="text-xs sm:text-sm"
                   >
                     {cart.find(i => i.id === book.id) 
                       ? 'In Cart' 
@@ -351,76 +352,78 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
         {transactions && transactions.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <History className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <History className="h-4 w-4 sm:h-5 sm:w-5" />
                 Payment History
               </CardTitle>
-              <CardDescription>Your previous payment records.</CardDescription>
+              <CardDescription className="text-sm">Your previous payment records.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Textbook</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Date</TableHead>
-                    <TableHead className="text-center">Collection Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.map((transaction, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{transaction.textbookName}</TableCell>
-                      <TableCell className="text-right">₦{transaction.totalAmount.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{formatDate(transaction.date)}</TableCell>
-                      <TableCell className="text-center">
-                        {transaction.isCollected ? (
-                          <div className="flex flex-col items-center text-green-600">
-                            <div className="flex items-center gap-1">
-                              <CheckCircle className="h-4 w-4" />
-                              <span className="text-xs font-medium">Collected</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">by {transaction.collectedBy}</span>
-                            {transaction.collectedAt && (
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(transaction.collectedAt).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-orange-600">
-                            <XCircle className="h-4 w-4" />
-                            <span className="text-xs font-medium">Pending Collection</span>
-                          </div>
-                        )}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs sm:text-sm">Textbook</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">Amount</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">Date</TableHead>
+                      <TableHead className="text-center text-xs sm:text-sm">Collection Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((transaction, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-xs sm:text-sm">{transaction.textbookName}</TableCell>
+                        <TableCell className="text-right text-xs sm:text-sm">₦{transaction.totalAmount.toLocaleString()}</TableCell>
+                        <TableCell className="text-right text-xs sm:text-sm">{formatDate(transaction.date)}</TableCell>
+                        <TableCell className="text-center">
+                          {transaction.isCollected ? (
+                            <div className="flex flex-col items-center text-green-600">
+                              <div className="flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="text-xs font-medium">Collected</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">by {transaction.collectedBy}</span>
+                              {transaction.collectedAt && (
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(transaction.collectedAt).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-orange-600">
+                              <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <span className="text-xs font-medium">Pending Collection</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         )}
       </div>
 
       <div>
-        <Card className="sticky top-24">
+        <Card className="sticky top-4 sm:top-6 lg:top-24">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-6 w-6" /> Your Cart
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" /> Your Cart
             </CardTitle>
-            <CardDescription>Review your selection and proceed with payment verification.</CardDescription>
+            <CardDescription className="text-sm">Review your selection and proceed with payment verification.</CardDescription>
           </CardHeader>
           <CardContent>
             {cart.length === 0 ? (
-              <p className="text-center text-muted-foreground">Your cart is empty.</p>
+              <p className="text-center text-muted-foreground text-sm">Your cart is empty.</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div className="space-y-2">
                   {cart.map(item => (
                     <div key={item.id} className="flex justify-between items-center">
-                      <span className="flex-1">{item.name}</span>
-                      <span className="font-mono">₦{item.price.toLocaleString()}</span>
+                      <span className="flex-1 text-sm sm:text-base">{item.name}</span>
+                      <span className="font-mono text-sm sm:text-base">₦{item.price.toLocaleString()}</span>
                       <Button variant="ghost" size="icon" className="ml-2 h-6 w-6" onClick={() => removeFromCart(item.id)}>
                         <XCircle className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -428,18 +431,18 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                   ))}
                 </div>
                 <Separator />
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between font-bold text-base sm:text-lg">
                   <span>Total</span>
                   <span>₦{totalAmount.toLocaleString()}</span>
                 </div>
                 <Separator />
-                <div className='space-y-4'>
+                <div className='space-y-3 sm:space-y-4'>
                     <Alert variant="default" className="border-accent">
                         <Info className="h-4 w-4 !text-accent" />
-                        <AlertTitle>Payment Information</AlertTitle>
-                        <AlertDescription>
+                        <AlertTitle className="text-sm sm:text-base">Payment Information</AlertTitle>
+                        <AlertDescription className="text-xs sm:text-sm">
                             Please transfer <strong>₦{totalAmount.toLocaleString()}</strong> to the account below:
-                            <ul className="mt-2 list-none space-y-1">
+                            <ul className="mt-2 list-none space-y-1 text-xs sm:text-sm">
                                 <li><strong>Bank:</strong> Opay</li>
                                 <li><strong>Account Number:</strong> 7065136040</li>
                                 <li><strong>Account Name:</strong> Mmegwa Uzonna Anthony</li>
@@ -448,10 +451,10 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                     </Alert>
 
                     <div className="space-y-2">
-                      <Label htmlFor="receipt">Upload Payment Receipt</Label>
-                      <Input id="receipt" type="file" accept="image/*" onChange={handleFileChange} />
+                      <Label htmlFor="receipt" className="text-sm sm:text-base">Upload Payment Receipt</Label>
+                      <Input id="receipt" type="file" accept="image/*" onChange={handleFileChange} className="text-sm" />
                     </div>
-                    <Button className="w-full" onClick={handleVerify} disabled={isVerifying}>
+                    <Button className="w-full text-sm sm:text-base" onClick={handleVerify} disabled={isVerifying}>
                       {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Verify Payment
                     </Button>
@@ -461,8 +464,8 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                   <>
                     <Alert variant={verificationResult.isApproved ? 'default' : 'destructive'} className={verificationResult.isApproved ? 'border-green-500' : ''}>
                       {verificationResult.isApproved ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                      <AlertTitle>{verificationResult.isApproved ? 'Payment Approved' : 'Payment Rejected'}</AlertTitle>
-                      <AlertDescription>{verificationResult.reason}</AlertDescription>
+                      <AlertTitle className="text-sm sm:text-base">{verificationResult.isApproved ? 'Payment Approved' : 'Payment Rejected'}</AlertTitle>
+                      <AlertDescription className="text-xs sm:text-sm">{verificationResult.reason}</AlertDescription>
                     </Alert>
                     {verificationResult.isApproved && showDownload && (
                       <div style={{ marginTop: 24, textAlign: 'center' }}>
@@ -474,7 +477,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                         </div>
                         <Button
                           onClick={() => downloadReceiptAsPng(receiptRef, student?.name || 'User')}
-                          className="mt-2"
+                          className="mt-2 text-sm sm:text-base"
                         >
                           Download Receipt (PNG)
                         </Button>

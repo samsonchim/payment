@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <AppHeader user={student} />
-      <main className="flex-1 p-4 sm:p-6 md:p-8">
+      <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 pb-20 sm:pb-16">
         <DashboardClient student={student} textbooks={textbooks} transactions={transactions} />
       </main>
     </div>
