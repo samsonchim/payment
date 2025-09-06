@@ -24,34 +24,204 @@ interface ReceiptContentProps {
   items: { id: string; name: string; price: number }[];
   total: number;
 }
+
 function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
   return (
-    <div id="receipt-content" style={{ background: '#fff', padding: 24, fontFamily: 'Arial', width: 400 }}>
-      <h1 style={{ textAlign: 'center', fontSize: 24, marginBottom: 16 }}>CLASS of CHAMPIONS 2023</h1>
-      <p><strong>Name:</strong> {userName}</p>
-      <table style={{ width: '100%', borderCollapse: 'collapse', margin: '24px 0' }}>
-        <thead>
-          <tr>
-            <th style={{ border: '1px solid #ddd', padding: 8 }}>Item</th>
-            <th style={{ border: '1px solid #ddd', padding: 8 }}>Price</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div id="receipt-content" style={{ 
+      background: '#fff', 
+      padding: 32, 
+      fontFamily: 'Arial, sans-serif', 
+      width: 420, 
+      position: 'relative',
+      border: '1px solid #e5e5e5',
+      borderRadius: '12px',
+      overflow: 'hidden'
+    }}>
+      {/* Watermark - Success Icon */}
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        fontSize: '120px',
+        color: '#f0f9ff',
+        zIndex: 0,
+        opacity: 0.1
+      }}>
+        ✓
+      </div>
+
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: 24, position: 'relative', zIndex: 1 }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          margin: '0 auto 16px',
+          display: 'inline-block',
+          fontSize: '20px',
+          fontWeight: 'bold',
+          letterSpacing: '1px',
+          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+        }}>
+          ⭐ CLASS OF CHAMPIONS 2025 ⭐
+        </div>
+      </div>
+
+      {/* Amount */}
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: 24,
+        position: 'relative',
+        zIndex: 1
+      }}>
+        <div style={{ 
+          fontSize: '36px', 
+          fontWeight: 'bold', 
+          color: '#3b82f6',
+          marginBottom: 8
+        }}>
+          ₦{total.toLocaleString()}
+        </div>
+        <div style={{ 
+          fontSize: '18px', 
+          color: '#16a34a',
+          fontWeight: '600'
+        }}>
+          Successful Transaction
+        </div>
+        <div style={{ 
+          fontSize: '14px', 
+          color: '#6b7280',
+          marginTop: 4
+        }}>
+          {new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          })}
+        </div>
+      </div>
+
+      {/* Student Info */}
+      <div style={{ 
+        marginBottom: 24,
+        position: 'relative',
+        zIndex: 1
+      }}>
+        <div style={{
+          background: '#f8fafc',
+          padding: '16px',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{ 
+            fontSize: '16px', 
+            fontWeight: 'bold', 
+            marginBottom: 8,
+            color: '#1e293b'
+          }}>
+            Student: {userName}
+          </div>
+        </div>
+      </div>
+
+      {/* Transaction Info */}
+      <div style={{ 
+        marginBottom: 24,
+        position: 'relative',
+        zIndex: 1
+      }}>
+        <div style={{
+          fontSize: '16px',
+          fontWeight: 'bold',
+          marginBottom: 12,
+          color: '#1e293b',
+          borderBottom: '2px solid #3b82f6',
+          paddingBottom: 8
+        }}>
+          Items Purchased:
+        </div>
+        <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '6px' }}>
           {items.map((item: { id: string; name: string; price: number }) => (
-            <tr key={item.id}>
-              <td style={{ border: '1px solid #ddd', padding: 8 }}>{item.name}</td>
-              <td style={{ border: '1px solid #ddd', padding: 8 }}>₦{item.price.toLocaleString()}</td>
-            </tr>
+            <div key={item.id} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '8px 0',
+              borderBottom: '1px solid #e2e8f0',
+              fontSize: '14px'
+            }}>
+              <span style={{ fontWeight: '500', color: '#374151' }}>{item.name}</span>
+              <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>₦{item.price.toLocaleString()}</span>
+            </div>
           ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td style={{ border: '1px solid #ddd', padding: 8, fontWeight: 'bold' }}>Total</td>
-            <td style={{ border: '1px solid #ddd', padding: 8, fontWeight: 'bold' }}>₦{total.toLocaleString()}</td>
-          </tr>
-        </tfoot>
-      </table>
-      <div style={{ textAlign: 'center', marginTop: 32, fontSize: 14, color: '#888' }}>by Samson Chi</div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 0 8px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#1e293b'
+          }}>
+            <span>Total:</span>
+            <span style={{ color: '#3b82f6' }}>₦{total.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <div style={{
+        background: 'linear-gradient(135deg, #fef3c7, #fbbf24)',
+        padding: '16px',
+        borderRadius: '8px',
+        marginBottom: 24,
+        border: '1px solid #f59e0b',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        <div style={{
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#92400e',
+          marginBottom: 8,
+          textAlign: 'center'
+        }}>
+          📋 IMPORTANT INSTRUCTION
+        </div>
+        <div style={{
+          fontSize: '13px',
+          color: '#92400e',
+          textAlign: 'center',
+          lineHeight: '1.4'
+        }}>
+          Keep this receipt safe or send it to the Course Representative
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ 
+        textAlign: 'center', 
+        fontSize: '11px', 
+        color: '#6b7280',
+        borderTop: '1px solid #e5e7eb',
+        paddingTop: 16,
+        position: 'relative',
+        zIndex: 1,
+        lineHeight: '1.4'
+      }}>
+        <div style={{ marginBottom: 4 }}>
+          This Receipt was generated upon payment from <strong style={{ color: '#3b82f6' }}>Neon Payment</strong>
+        </div>
+        <div style={{ fontSize: '10px' }}>
+          Developer: <strong>Samson Chi</strong>
+        </div>
+      </div>
     </div>
   );
 }
@@ -67,6 +237,14 @@ async function downloadReceiptAsPng(receiptRef: React.RefObject<HTMLDivElement>,
   a.click();
   document.body.removeChild(a);
 }
+
+interface DashboardClientProps {
+  student: Student;
+  textbooks: Textbook[];
+  transactions: Transaction[];
+}
+
+export function DashboardClient({ student, textbooks, transactions }: DashboardClientProps) {
   const [cart, setCart] = useState<Textbook[]>([]);
   const [receiptDataUri, setReceiptDataUri] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -122,14 +300,13 @@ async function downloadReceiptAsPng(receiptRef: React.RefObject<HTMLDivElement>,
     const result = await verifyAndRecordPayment(cart, receiptDataUri);
 
     if (result.isApproved) {
-    setVerificationResult({
-      isApproved: true,
-      reason: "Payment verified successfully! You can now download your receipt. Please send a screenshot of your receipt to Samson's WhatsApp."
-    });
-  setShowDownload(true);
-
+      setVerificationResult({
+        isApproved: true,
+        reason: "Payment verified successfully! You can now download your receipt."
+      });
+      setShowDownload(true);
     } else {
-        setVerificationResult(result);
+      setVerificationResult(result);
     }
 
     setIsVerifying(false);
@@ -165,42 +342,58 @@ async function downloadReceiptAsPng(receiptRef: React.RefObject<HTMLDivElement>,
                         ? 'Paid'
                         : 'Add to Cart'}
                   </Button>
-                          <Card>
-                            <CardHeader>
-                              <CardTitle>Available Textbooks</CardTitle>
-                              <CardDescription>Select the textbooks you wish to pay for.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid gap-4 md:grid-cols-2">
-                              {textbooks.map((book: { id: string; name: string; price: number }) => (
-                                <Card key={book.id}>
-                                  <CardContent className="p-4 flex justify-between items-center">
-                                    <div>
-                                      <p className="font-medium">{book.name}</p>
-                                      <p className="text-muted-foreground">₦{book.price.toLocaleString()}</p>
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => addToCart(book)}
-                                      disabled={!!cart.find((i: { id: string }) => i.id === book.id) || paidForTextbooks.has(book.name)}
-                                    >
-                                      {cart.find((i: { id: string }) => i.id === book.id) 
-                                        ? 'In Cart' 
-                                        : paidForTextbooks.has(book.name)
-                                          ? 'Paid'
-                                          : 'Add to Cart'}
-                                    </Button>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </CardContent>
-                          </Card>
-                          {/* ...existing code... */}
-                        </div>
-                        {/* ...existing code... */}
-                      </div>
-                    );
-                  }
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
+
+        {transactions && transactions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Payment History
+              </CardTitle>
+              <CardDescription>Your previous payment records.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Textbook</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Date</TableHead>
+                    <TableHead className="text-center">Collection Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((transaction, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{transaction.textbookName}</TableCell>
+                      <TableCell className="text-right">₦{transaction.totalAmount.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="text-center">
+                        {transaction.isCollected ? (
+                          <div className="flex flex-col items-center text-green-600">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-4 w-4" />
+                              <span className="text-xs font-medium">Collected</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">by {transaction.collectedBy}</span>
+                            {transaction.collectedAt && (
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(transaction.collectedAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-orange-600">
+                            <XCircle className="h-4 w-4" />
+                            <span className="text-xs font-medium">Pending Collection</span>
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

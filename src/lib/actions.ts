@@ -131,7 +131,10 @@ export async function getTransactions(): Promise<Transaction[]> {
       regNumber: t.reg_number,
       textbookName: t.name,
       totalAmount: t.amount_paid,
-      date: new Date(t.created_at).toISOString() 
+      date: new Date(t.created_at).toISOString(),
+      isCollected: t.isCollected || false,
+      collectedBy: t.collectedBy,
+      collectedAt: t.collectedAt
   }));
 }
 
@@ -156,7 +159,10 @@ export async function getStudentTransactions(regNumber: string): Promise<Transac
       regNumber: t.reg_number,
       textbookName: t.name,
       totalAmount: t.amount_paid,
-      date: new Date(t.created_at).toISOString()
+      date: new Date(t.created_at).toISOString(),
+      isCollected: t.isCollected || false,
+      collectedBy: t.collectedBy,
+      collectedAt: t.collectedAt
   }));
 }
 
@@ -261,6 +267,28 @@ export async function deleteTextbook(id: string) {
     revalidatePath('/admin/dashboard');
     revalidatePath('/dashboard');
     return { success: true };
+}
+
+export async function updateCollectionStatus(transactionId: string, collectedBy: string) {
+  const supabase = createAdminClient();
+  
+  const { error } = await supabase
+    .from('records')
+    .update({ 
+      isCollected: true, 
+      collectedBy: collectedBy,
+      collectedAt: new Date().toISOString() 
+    })
+    .eq('id', transactionId);
+
+  if (error) {
+    console.error('Error updating collection status:', error);
+    return { error: 'Failed to update collection status' };
+  }
+  
+  revalidatePath('/admin/dashboard');
+  revalidatePath('/dashboard');
+  return { success: true };
 }
 
 

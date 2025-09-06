@@ -12,7 +12,7 @@ import { FileDown, PlusCircle, Trash2, Edit, CheckCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { addTextbook, deleteTextbook, updateTextbook, deleteTransaction } from '@/lib/actions';
+import { addTextbook, deleteTextbook, updateTextbook, deleteTransaction, updateCollectionStatus } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -82,6 +82,8 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
     </Dialog>
   );
 }
+
+export function AdminDashboardClient({
   initialTextbooks,
   initialTransactions,
   initialStudents,
@@ -95,8 +97,19 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
   const [students, setStudents] = useState(initialStudents);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
-  const [collectingBookId, setCollectingBookId] = useState<string | null>(null);
-  const [collected, setCollected] = useState<Record<string, { by: string, date: string }>>({});
+  const [collectingTransactionId, setCollectingTransactionId] = useState<string | null>(null);
+  
+  // Initialize collected state from database data
+  const [collected, setCollected] = useState<Record<string, { by: string, date: string }>>(() => {
+    const initialCollected: Record<string, { by: string, date: string }> = {};
+    initialTransactions.forEach(t => {
+      if (t.isCollected && t.collectedBy && t.collectedAt) {
+        initialCollected[t.id] = { by: t.collectedBy, date: t.collectedAt };
+      }
+    });
+    return initialCollected;
+  });
+  
   const [editingTextbook, setEditingTextbook] = useState<Textbook | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
@@ -160,21 +173,36 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
     setTransactionToDelete(null);
   }
 
-  const handleCollect = (bookId: string) => {
-    setCollectingBookId(bookId);
+  const handleCollect = (transactionId: string) => {
+    setCollectingTransactionId(transactionId);
     setCollectionDialogOpen(true);
   };
 
-  const confirmCollect = (collector: string) => {
-    if (collectingBookId) {
-      setCollected(prev => ({
-        ...prev,
-        [collectingBookId]: { by: collector, date: new Date().toISOString() }
-      }));
+  const confirmCollect = async (collector: string) => {
+    if (collectingTransactionId) {
+      const result = await updateCollectionStatus(collectingTransactionId, collector);
+      
+      if (result.error) {
+        toast({ variant: 'destructive', title: 'Error', description: result.error });
+      } else {
+        // Update local transactions state
+        setTransactions(prev => prev.map(t => 
+          t.id === collectingTransactionId 
+            ? { ...t, isCollected: true, collectedBy: collector, collectedAt: new Date().toISOString() }
+            : t
+        ));
+        
+        // Update local collected state for UI
+        setCollected(prev => ({
+          ...prev,
+          [collectingTransactionId]: { by: collector, date: new Date().toISOString() }
+        }));
+        
+        toast({ title: 'Textbook marked as collected and saved to database.' });
+      }
     }
     setCollectionDialogOpen(false);
-    setCollectingBookId(null);
-    toast({ title: 'Textbook marked as collected.' });
+    setCollectingTransactionId(null);
   };
 
   return (
@@ -216,7 +244,6 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-center">Collected</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -225,19 +252,6 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
                   <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.name}</TableCell>
                     <TableCell className="text-right">₦{book.price.toLocaleString()}</TableCell>
-                    <TableCell className="text-center">
-                      {collected[book.id] ? (
-                        <span className="flex flex-col items-center text-green-600">
-                          <CheckCircle className="h-4 w-4 mb-1" />
-                          <span className="text-xs">{collected[book.id].by}</span>
-                          <span className="text-xs">{new Date(collected[book.id].date).toLocaleDateString()}</span>
-                        </span>
-                      ) : (
-                        <Button size="sm" variant="outline" onClick={() => handleCollect(book.id)}>
-                          Collect
-                        </Button>
-                      )}
-                    </TableCell>
                     <TableCell className="text-right">
                          <Button variant="ghost" size="icon" onClick={() => { setEditingTextbook(book); setDialogOpen(true); }}>
                              <Edit className="h-4 w-4" />
@@ -250,7 +264,6 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
                 ))}
               </TableBody>
             </Table>
-            <CollectionDialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen} onConfirm={confirmCollect} />
           </CardContent>
         </Card>
       </TabsContent>
@@ -277,6 +290,7 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
                           <TableHead>Textbook</TableHead>
                           <TableHead className="text-right">Amount Paid</TableHead>
                           <TableHead className="text-right">Date</TableHead>
+                          <TableHead className="text-center">Collected</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                   </TableHeader>
@@ -289,6 +303,19 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
                                   <TableCell>{t.textbookName}</TableCell>
                                   <TableCell className="text-right">₦{t.totalAmount.toLocaleString()}</TableCell>
                                   <TableCell className="text-right">{formatDate(t.date)}</TableCell>
+                                  <TableCell className="text-center">
+                                    {collected[t.id] ? (
+                                      <span className="flex flex-col items-center text-green-600">
+                                        <CheckCircle className="h-4 w-4 mb-1" />
+                                        <span className="text-xs">{collected[t.id].by}</span>
+                                        <span className="text-xs">{new Date(collected[t.id].date).toLocaleDateString()}</span>
+                                      </span>
+                                    ) : (
+                                      <Button size="sm" variant="outline" onClick={() => handleCollect(t.id)}>
+                                        Collect
+                                      </Button>
+                                    )}
+                                  </TableCell>
                                   <TableCell className="text-right">
                                     <Button
                                       variant="outline"
@@ -303,11 +330,12 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
                           ))
                       ) : (
                           <TableRow>
-                              <TableCell colSpan={6} className="text-center">No transactions yet.</TableCell>
+                              <TableCell colSpan={7} className="text-center">No transactions yet.</TableCell>
                           </TableRow>
                       )}
                   </TableBody>
               </Table>
+              <CollectionDialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen} onConfirm={confirmCollect} />
           </CardContent>
         </Card>
       </TabsContent>
@@ -346,16 +374,16 @@ function CollectionDialog({ open, onOpenChange, onConfirm }) {
           <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete this payment record?
-            {transactionToDelete && (
-              <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
-                <strong>Student:</strong> {transactionToDelete.studentName}<br/>
-                <strong>Registration:</strong> {transactionToDelete.regNumber}<br/>
-                <strong>Textbook:</strong> {transactionToDelete.textbookName}<br/>
-                <strong>Amount:</strong> ₦{transactionToDelete.totalAmount.toLocaleString()}
-              </div>
-            )}
             This action cannot be undone and will permanently remove this transaction record from the database.
           </AlertDialogDescription>
+          {transactionToDelete && (
+            <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+              <strong>Student:</strong> {transactionToDelete.studentName}<br/>
+              <strong>Registration:</strong> {transactionToDelete.regNumber}<br/>
+              <strong>Textbook:</strong> {transactionToDelete.textbookName}<br/>
+              <strong>Amount:</strong> ₦{transactionToDelete.totalAmount.toLocaleString()}
+            </div>
+          )}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>

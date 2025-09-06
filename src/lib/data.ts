@@ -17,6 +17,9 @@ export interface Transaction {
   textbookName: string; 
   totalAmount: number;
   date: string; // Will be an ISO string
+  isCollected?: boolean;
+  collectedBy?: string;
+  collectedAt?: string;
 }
 
 // NOTE: This file now only contains type definitions.
