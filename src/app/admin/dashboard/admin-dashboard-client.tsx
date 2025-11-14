@@ -95,9 +95,19 @@ export function AdminDashboardClient({
   const [textbooks, setTextbooks] = useState(initialTextbooks);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [students, setStudents] = useState(initialStudents);
+  // Pagination state for Payment Records
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10; // items per page
+
+  const totalPages = Math.max(1, Math.ceil((transactions?.length || 0) / pageSize));
+  const startIdx = (currentPage - 1) * pageSize;
+  const paginatedTransactions = (transactions || []).slice(startIdx, startIdx + pageSize);
 
   // Keep local state in sync when server props refresh
-  useEffect(() => { setTransactions(initialTransactions); }, [initialTransactions]);
+  useEffect(() => { 
+    setTransactions(initialTransactions);
+    setCurrentPage(1); // reset to first page when data refreshes
+  }, [initialTransactions]);
   useEffect(() => { setTextbooks(initialTextbooks); }, [initialTextbooks]);
   useEffect(() => { setStudents(initialStudents); }, [initialStudents]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -357,6 +367,28 @@ export function AdminDashboardClient({
               <Button size="sm" variant="outline" className="gap-1" onClick={() => router.push('/admin/manual-records')}>
                 Show Manual Records
               </Button>
+              {/* Pagination controls (header) */}
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
             <div>
               <CardTitle>Payment Records</CardTitle>
@@ -380,7 +412,7 @@ export function AdminDashboardClient({
                   </TableHeader>
                   <TableBody>
                       {transactions.length > 0 ? (
-                          transactions.map((t, i) => (
+                          paginatedTransactions.map((t, i) => (
                               <TableRow key={t.id}>
                                   <TableCell>{t.studentName}</TableCell>
                                   <TableCell>{t.regNumber}</TableCell>
@@ -419,6 +451,31 @@ export function AdminDashboardClient({
                       )}
                   </TableBody>
               </Table>
+
+              {/* Pagination controls (footer) */}
+              {transactions.length > pageSize && (
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
               <CollectionDialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen} onConfirm={confirmCollect} />
           </CardContent>
         </Card>

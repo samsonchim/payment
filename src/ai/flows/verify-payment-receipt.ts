@@ -42,9 +42,8 @@ You will receive an image of a payment receipt, the expected payment amount, and
 
 For the payment to be approved, ALL of the following conditions MUST be met:
 1. The amount paid on the receipt must be equal to or GREATER THAN the expected amount. If it is less than the expected amount, you must reject it. Any amount paid over the expected amount is considered a tip.
-2. The recipient's bank name MUST be "Palmpay" or "Palmpay" or "Palmpay MFB".
+2. The recipient's bank name MUST be "Opay" or "Opay" or "Opay MFB".
 3. The recipient's name MUST be EXACTLY "Mmegwa Uzonna Anthony" or "Anthony Uzonna Mmegwa". No other variations or additional names are acceptable. The order of the first and last name does not matter.
-4. The payment MUST be from that day (i.e., the date on the receipt must match today's date, skip if no date is provided on the receipt).
 
 If any of these conditions are not met, you must reject the payment. DO NOT check the account number.
 

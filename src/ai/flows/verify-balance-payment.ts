@@ -48,7 +48,6 @@ For the payment to be approved, ALL of the following conditions MUST be met:
   - "Promise Ogbu Ucha"
   - "Promise Ucha Ogbu"
   - "Ogbu Ucha Promise"
-5. The payment MUST be from that day (i.e., the date on the receipt must match today's date, skip if no date is provided on the receipt).
 
 If any of these conditions are not met, you must reject the payment.
 

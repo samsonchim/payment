@@ -484,7 +484,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                         <AlertDescription className="text-xs sm:text-sm">
                             Please transfer <strong>₦{totalAmount.toLocaleString()}</strong> to the account below:
                             <ul className="mt-2 list-none space-y-1 text-xs sm:text-sm">
-                                <li><strong>Bank:</strong> Palmpay</li>
+                                <li><strong>Bank:</strong> Opay</li>
                                 <li><strong>Account Number:</strong> 7065136040</li>
                                 <li><strong>Account Name:</strong> Mmegwa Uzonna Anthony</li>
                             </ul>
