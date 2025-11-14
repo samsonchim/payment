@@ -3,16 +3,16 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { loginAdmin } from '@/lib/actions';
 import { AppLogo } from '@/components/icons';
 import { Preloader } from '@/components/preloader';
+import { useSarcasticPopup } from '@/components/sarcastic-popup';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -25,26 +25,23 @@ function SubmitButton() {
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { showSuccess, showError, PopupComponent } = useSarcasticPopup();
   const [state, formAction] = useActionState(loginAdmin, null);
   const [showPreloader, setShowPreloader] = useState(true);
 
+  const handled = useRef({ success: false, error: false });
   useEffect(() => {
-    if (state?.success) {
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome, Admin!',
-      });
-      router.push('/admin/dashboard');
+    if (state?.success && !handled.current.success) {
+      handled.current.success = true;
+      showSuccess('Admin access granted!');
+      router.replace('/admin/dashboard');
+    } else if (state?.error && !handled.current.error) {
+      handled.current.error = true;
+      showError(state.error || 'Access denied!');
     }
-    if (state?.error) {
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: state.error,
-      });
-    }
-  }, [state, router, toast]);
+    // Only react to state changes; avoid depending on popup function identities
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, router]);
 
   const handlePreloaderComplete = () => {
     setShowPreloader(false);
@@ -55,50 +52,55 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              <AppLogo />
-            </div>
-            <CardTitle className="text-2xl">Admin Login</CardTitle>
-            <CardDescription>Enter your credentials to manage the application.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={formAction} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  name="username"
-                  placeholder="admin"
-                  required
-                  autoComplete="username"
-                />
+    <>
+      {PopupComponent}
+      <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-br from-green-50 to-white">
+        <div className="w-full max-w-md">
+          <Card className="shadow-xl border-green-200">
+            <CardHeader className="text-center bg-gradient-to-br from-green-50 to-white">
+              <div className="mx-auto mb-4">
+                <AppLogo />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                />
-              </div>
-              <SubmitButton />
-            </form>
-          </CardContent>
-        </Card>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
+              <CardTitle className="text-2xl text-green-800">Admin Login</CardTitle>
+              <CardDescription className="text-green-600">Enter your credentials to manage the application.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <form action={formAction} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-green-700">Username</Label>
+                  <Input
+                    id="username"
+                    name="username"
+                    placeholder="admin"
+                    required
+                    autoComplete="username"
+                    className="border-green-300 focus:border-green-500 focus:ring-green-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-green-700">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    autoComplete="current-password"
+                    className="border-green-300 focus:border-green-500 focus:ring-green-500"
+                  />
+                </div>
+                <SubmitButton />
+              </form>
+            </CardContent>
+          </Card>
+          <p className="mt-4 text-center text-sm text-green-700">
             Not an admin?{' '}
-            <a href="/" className="font-medium text-primary hover:underline">
-                Login as student
+            <a href="/" className="font-medium text-green-600 hover:text-green-800 hover:underline">
+              Login as student
             </a>
-        </p>
-      </div>
-    </main>
+          </p>
+        </div>
+      </main>
+    </>
   );
 }

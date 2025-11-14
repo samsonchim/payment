@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { DemotivationTimer } from "@/components/demotivation-timer"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -34,8 +35,8 @@ export default function RootLayout({
             By <a href="https://github.com/samsonchim/" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-primary transition-colors">Samson Chi</a>
           </footer>
         </div>
-        <Toaster />
-        <Toaster />
+    <Toaster />
+    <DemotivationTimer />
       </body>
     </html>
   );

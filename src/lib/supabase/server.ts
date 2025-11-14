@@ -1,8 +1,8 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export function createClient() {
-  const cookieStore = cookies()
+export async function createClient() {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,12 +35,12 @@ export function createClient() {
   )
 }
 
-export function createAdminClient() {
+export async function createAdminClient() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set in .env');
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   // Admin client uses the service role key for auth but still needs cookie handlers.
   return createServerClient(

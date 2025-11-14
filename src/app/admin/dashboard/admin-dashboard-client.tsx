@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useActionState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { FileDown, PlusCircle, Trash2, Edit, CheckCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { addTextbook, deleteTextbook, updateTextbook, deleteTransaction, updateCollectionStatus } from '@/lib/actions';
+import { addTextbook, deleteTextbook, updateTextbook, deleteTransaction, updateCollectionStatus, addManualRecord } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -57,7 +57,7 @@ const TextbookForm = ({ textbook, onDone }: { textbook?: Textbook, onDone: () =>
 };
 
 // Helper for collection state
-function CollectionDialog({ open, onOpenChange, onConfirm }) {
+function CollectionDialog({ open, onOpenChange, onConfirm }: { open: boolean; onOpenChange: (open: boolean) => void; onConfirm: (collector: string) => void }) {
   const [collector, setCollector] = useState('');
   const [bySelf, setBySelf] = useState(false);
   return (
@@ -95,6 +95,11 @@ export function AdminDashboardClient({
   const [textbooks, setTextbooks] = useState(initialTextbooks);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [students, setStudents] = useState(initialStudents);
+
+  // Keep local state in sync when server props refresh
+  useEffect(() => { setTransactions(initialTransactions); }, [initialTransactions]);
+  useEffect(() => { setTextbooks(initialTextbooks); }, [initialTextbooks]);
+  useEffect(() => { setStudents(initialStudents); }, [initialStudents]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
   const [collectingTransactionId, setCollectingTransactionId] = useState<string | null>(null);
@@ -109,6 +114,16 @@ export function AdminDashboardClient({
     });
     return initialCollected;
   });
+  // Recompute collected map whenever transactions refresh from server or change locally
+  useEffect(() => {
+    const next: Record<string, { by: string, date: string }> = {};
+    transactions.forEach(t => {
+      if (t.isCollected && t.collectedBy && t.collectedAt) {
+        next[t.id] = { by: t.collectedBy, date: t.collectedAt };
+      }
+    });
+    setCollected(next);
+  }, [transactions]);
   
   const [editingTextbook, setEditingTextbook] = useState<Textbook | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -205,13 +220,62 @@ export function AdminDashboardClient({
     setCollectingTransactionId(null);
   };
 
+  // Manual record form component
+  const ManualRecordForm = ({ onDone }: { onDone: () => void }) => {
+    const [state, formAction, isPending] = useActionState(addManualRecord, null);
+    const [regNumber, setRegNumber] = useState('');
+    const student = students.find(s => s.regNumber === regNumber);
+    const handledRef = useRef(false);
+
+    useEffect(() => {
+      if (state?.success && !handledRef.current) {
+        handledRef.current = true;
+        toast({ title: 'Record created successfully' });
+        router.refresh();
+        setTimeout(() => onDone(), 1000); // Delay closing to allow refresh to show the new record
+      }
+      if (state?.error && !handledRef.current) {
+        handledRef.current = true;
+        toast({ variant: 'destructive', title: 'Error', description: state.error });
+      }
+    }, [state, onDone, toast, router]);
+
+    const today = new Date().toISOString().split('T')[0];
+
+    return (
+      <form action={formAction} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="regNumber">Registration Number</Label>
+          <Input id="regNumber" name="regNumber" value={regNumber} onChange={e => setRegNumber(e.target.value)} required />
+          <p className="text-sm text-muted-foreground">
+            {regNumber && (student ? `Student: ${student.name}` : 'No student found for this registration number')}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="itemName">What they paid for</Label>
+          <Input id="itemName" name="itemName" placeholder="e.g. Discrete Structures" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="amount">Amount (NGN)</Label>
+          <Input id="amount" name="amount" type="number" min="1" step="1" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="date">Date</Label>
+          <Input id="date" name="date" type="date" defaultValue={today} />
+        </div>
+        <DialogFooter>
+          <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Create Record'}</Button>
+        </DialogFooter>
+      </form>
+    );
+  };
+
   return (
     <>
       <Tabs defaultValue="textbooks">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="textbooks">Manage Textbooks</TabsTrigger>
         <TabsTrigger value="transactions">Payment Records</TabsTrigger>
-        <TabsTrigger value="students">Students</TabsTrigger>
       </TabsList>
       <TabsContent value="textbooks">
         <Card>
@@ -269,17 +333,37 @@ export function AdminDashboardClient({
       </TabsContent>
       <TabsContent value="transactions">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1">
+                    <PlusCircle className="h-4 w-4" />
+                    Add Manual Record
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Manual Payment Record</DialogTitle>
+                    <DialogDescription>Enter registration number, item, amount, and date. The student name will be matched automatically.</DialogDescription>
+                  </DialogHeader>
+                  <ManualRecordForm onDone={() => setDialogOpen(false)} />
+                </DialogContent>
+              </Dialog>
+              <Button size="sm" className="gap-1" onClick={handleDownload} disabled={transactions.length === 0}>
+                <FileDown className="h-4 w-4" />
+                Download CSV
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => router.push('/admin/manual-records')}>
+                Show Manual Records
+              </Button>
+            </div>
             <div>
               <CardTitle>Payment Records</CardTitle>
               <CardDescription>
                 {transactions.length} approved transaction(s) recorded.
               </CardDescription>
             </div>
-            <Button size="sm" className="gap-1" onClick={handleDownload} disabled={transactions.length === 0}>
-              <FileDown className="h-4 w-4" />
-              Download CSV
-            </Button>
           </CardHeader>
           <CardContent>
               <Table>
@@ -338,33 +422,7 @@ export function AdminDashboardClient({
               <CollectionDialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen} onConfirm={confirmCollect} />
           </CardContent>
         </Card>
-      </TabsContent>
-      <TabsContent value="students">
-        <Card>
-            <CardHeader>
-                <CardTitle>Registered Students</CardTitle>
-                <CardDescription>A list of all students in the system.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Registration Number</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {students.map((student: Student) => (
-                            <TableRow key={student.regNumber}>
-                                <TableCell>{student.name}</TableCell>
-                                <TableCell>{student.regNumber}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-      </TabsContent>
+    </TabsContent>
     </Tabs>
     
     {/* Delete Transaction Confirmation Dialog */}

@@ -22,5 +22,28 @@ export interface Transaction {
   collectedAt?: string;
 }
 
+export interface ManualRecord {
+  id: string;
+  studentName: string;
+  regNumber: string;
+  product: string;
+  price: number;
+  time: string;
+  isCollected?: boolean;
+  collectedBy?: string;
+  collectedAt?: string;
+}
+
+export interface BalancePayment {
+  id: string;
+  studentRegNumber: string;
+  itemName: string;
+  amount: number;
+  receiptText: string;
+  verified: boolean;
+  verifiedAt?: string;
+  createdAt: string;
+}
+
 // NOTE: This file now only contains type definitions.
 // The data is now managed by the database.

@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
+import { useSarcasticPopup } from '@/components/sarcastic-popup';
 import { verifyAndRecordPayment } from '@/lib/actions';
 import type { Student, Textbook, Transaction } from '@/lib/data';
 import { ShoppingCart, CheckCircle, XCircle, Loader2, Info, History } from 'lucide-react';
@@ -28,12 +28,12 @@ interface ReceiptContentProps {
 function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
   return (
     <div id="receipt-content" style={{ 
-      background: 'hsl(0, 0%, 94%)', 
+      background: 'hsl(0, 0%, 100%)', 
       padding: window.innerWidth < 640 ? 16 : 32, 
       fontFamily: 'Arial, sans-serif', 
       width: window.innerWidth < 640 ? 320 : 420, 
       position: 'relative',
-      border: '2px solid hsl(181, 39%, 45%)',
+      border: '3px solid hsl(142, 76%, 36%)',
       borderRadius: '12px',
       overflow: 'hidden'
     }}>
@@ -44,7 +44,7 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         fontSize: '120px',
-        color: 'hsl(181, 39%, 85%)',
+        color: 'hsl(142, 76%, 90%)',
         zIndex: 0,
         opacity: 0.1
       }}>
@@ -54,7 +54,7 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: window.innerWidth < 640 ? 16 : 24, position: 'relative', zIndex: 1 }}>
         <div style={{
-          background: 'linear-gradient(135deg, hsl(181, 39%, 45%), hsl(181, 39%, 35%))',
+          background: 'linear-gradient(135deg, hsl(142, 76%, 36%), hsl(142, 76%, 25%))',
           color: 'white',
           padding: window.innerWidth < 640 ? '8px 16px' : '12px 24px',
           borderRadius: '8px',
@@ -63,7 +63,7 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
           fontSize: window.innerWidth < 640 ? '16px' : '20px',
           fontWeight: 'bold',
           letterSpacing: '1px',
-          boxShadow: '0 4px 12px hsla(181, 39%, 45%, 0.3)'
+          boxShadow: '0 4px 12px hsla(142, 76%, 36%, 0.3)'
         }}>
           ⭐ CLASS OF CHAMPIONS 2025 ⭐
         </div>
@@ -79,21 +79,21 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
         <div style={{ 
           fontSize: window.innerWidth < 640 ? '28px' : '36px', 
           fontWeight: 'bold', 
-          color: 'hsl(181, 39%, 45%)',
+          color: 'hsl(142, 76%, 36%)',
           marginBottom: 8
         }}>
           ₦{total.toLocaleString()}
         </div>
         <div style={{ 
           fontSize: window.innerWidth < 640 ? '14px' : '18px', 
-          color: 'hsl(120, 60%, 35%)',
+          color: 'hsl(142, 70%, 40%)',
           fontWeight: '600'
         }}>
           Successful Transaction
         </div>
         <div style={{ 
           fontSize: window.innerWidth < 640 ? '12px' : '14px', 
-          color: 'hsl(181, 39%, 30%)',
+          color: 'hsl(142, 40%, 40%)',
           marginTop: 4
         }}>
           {new Date().toLocaleDateString('en-US', { 
@@ -114,16 +114,16 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
         zIndex: 1
       }}>
         <div style={{
-          background: 'hsl(181, 39%, 90%)',
+          background: 'hsl(138, 76%, 97%)',
           padding: '16px',
           borderRadius: '8px',
-          border: '1px solid hsl(181, 39%, 75%)'
+          border: '2px solid hsl(142, 76%, 80%)'
         }}>
           <div style={{ 
             fontSize: '16px', 
             fontWeight: 'bold', 
             marginBottom: 8,
-            color: 'hsl(181, 39%, 25%)'
+            color: 'hsl(142, 76%, 25%)'
           }}>
             Student: {userName}
           </div>
@@ -140,24 +140,24 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
           fontSize: '16px',
           fontWeight: 'bold',
           marginBottom: 12,
-          color: 'hsl(181, 39%, 25%)',
-          borderBottom: '2px solid hsl(181, 39%, 45%)',
+          color: 'hsl(142, 76%, 25%)',
+          borderBottom: '2px solid hsl(142, 76%, 36%)',
           paddingBottom: 8
         }}>
           Items Purchased:
         </div>
-        <div style={{ background: 'hsl(181, 39%, 90%)', padding: '12px', borderRadius: '6px' }}>
+        <div style={{ background: 'hsl(138, 76%, 97%)', padding: '12px', borderRadius: '6px', border: '1px solid hsl(142, 76%, 80%)' }}>
           {items.map((item: { id: string; name: string; price: number }) => (
             <div key={item.id} style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '8px 0',
-              borderBottom: '1px solid hsl(181, 39%, 75%)',
+              borderBottom: '1px solid hsl(142, 76%, 85%)',
               fontSize: '14px'
             }}>
-              <span style={{ fontWeight: '500', color: 'hsl(181, 39%, 30%)' }}>{item.name}</span>
-              <span style={{ fontWeight: 'bold', color: 'hsl(181, 39%, 45%)' }}>₦{item.price.toLocaleString()}</span>
+              <span style={{ fontWeight: '500', color: 'hsl(142, 76%, 30%)' }}>{item.name}</span>
+              <span style={{ fontWeight: 'bold', color: 'hsl(142, 76%, 36%)' }}>₦{item.price.toLocaleString()}</span>
             </div>
           ))}
           <div style={{
@@ -167,28 +167,28 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
             padding: '12px 0 8px',
             fontSize: '16px',
             fontWeight: 'bold',
-            color: 'hsl(181, 39%, 25%)'
+            color: 'hsl(142, 76%, 25%)'
           }}>
             <span>Total:</span>
-            <span style={{ color: 'hsl(181, 39%, 45%)' }}>₦{total.toLocaleString()}</span>
+            <span style={{ color: 'hsl(142, 76%, 36%)' }}>₦{total.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Instructions */}
       <div style={{
-        background: 'linear-gradient(135deg, hsl(181, 39%, 85%), hsl(181, 39%, 70%))',
+        background: 'linear-gradient(135deg, hsl(142, 76%, 95%), hsl(142, 76%, 85%))',
         padding: '16px',
         borderRadius: '8px',
         marginBottom: 24,
-        border: '1px solid hsl(181, 39%, 55%)',
+        border: '2px solid hsl(142, 76%, 60%)',
         position: 'relative',
         zIndex: 1
       }}>
         <div style={{
           fontSize: '14px',
           fontWeight: 'bold',
-          color: 'hsl(181, 39%, 25%)',
+          color: 'hsl(142, 76%, 25%)',
           marginBottom: 8,
           textAlign: 'center'
         }}>
@@ -196,7 +196,7 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
         </div>
         <div style={{
           fontSize: '13px',
-          color: 'hsl(181, 39%, 25%)',
+          color: 'hsl(142, 76%, 30%)',
           textAlign: 'center',
           lineHeight: '1.4'
         }}>
@@ -208,15 +208,15 @@ function ReceiptContent({ userName, items, total }: ReceiptContentProps) {
       <div style={{ 
         textAlign: 'center', 
         fontSize: '11px', 
-        color: 'hsl(181, 39%, 30%)',
-        borderTop: '1px solid hsl(181, 39%, 75%)',
+        color: 'hsl(142, 76%, 30%)',
+        borderTop: '2px solid hsl(142, 76%, 80%)',
         paddingTop: 16,
         position: 'relative',
         zIndex: 1,
         lineHeight: '1.4'
       }}>
         <div style={{ marginBottom: 4 }}>
-          This Receipt was generated upon payment from <strong style={{ color: 'hsl(181, 39%, 45%)' }}>Neon Payment</strong>
+          This Receipt was generated upon payment from <strong style={{ color: 'hsl(142, 76%, 36%)' }}>Neon Payment</strong>
         </div>
         <div style={{ fontSize: '10px' }}>
           Developer: <strong>Samson Chi</strong>
@@ -251,7 +251,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
   const [verificationResult, setVerificationResult] = useState<{ isApproved: boolean; reason: string } | null>(null);
   const [showDownload, setShowDownload] = useState(false);
   const receiptRef = useRef(null);
-  const { toast } = useToast();
+  const { showSuccess, showError, showVerification, PopupComponent } = useSarcasticPopup();
   const router = useRouter();
 
   const totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
@@ -261,12 +261,26 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
     return date.toISOString().split('T')[0];
   }
 
+  // Check if student is eligible for balance payment (paid exactly ₦2,000 for Defense refreshment)
+  const isEligibleForBalancePayment = () => {
+    const normalize = (s?: string) => (s || '').toLowerCase().trim();
+    const isDefenseBase = (name?: string) => {
+      const n = normalize(name);
+      // Accept common variants, exclude any balance entries
+      const isDefense = n === 'defense refreshment payment' || n === 'defence refreshment payment';
+      const isBalanceTag = n.includes('(balance)');
+      return isDefense && !isBalanceTag;
+    };
+
+    const relevant = transactions.filter(t => isDefenseBase(t.textbookName));
+    const totalPaid = relevant.reduce((sum, t) => sum + (Number(t.totalAmount) || 0), 0);
+    return totalPaid === 2000;
+  };
+
   const addToCart = (book: Textbook) => {
     if (!cart.find(item => item.id === book.id)) {
-      setCart([...cart, book]);
-      toast({
-        title: `${book.name} added to cart.`,
-      });
+  setCart([...cart, book]);
+  showSuccess(`${book.name} added to cart! Shopping spree mode activated!`);
     }
   };
 
@@ -277,8 +291,8 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 4 * 1024 * 1024) { // 4MB limit
-          toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a receipt smaller than 4MB.' });
+    if (file.size > 4 * 1024 * 1024) { // 4MB limit
+      showError('Whoa there! That file is bigger than your hopes and dreams! Keep it under 4MB, please!');
           e.target.value = ''; // Reset file input
           return;
       }
@@ -292,7 +306,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
 
   const handleVerify = async () => {
     if (!receiptDataUri) {
-      toast({ variant: 'destructive', title: 'No receipt uploaded', description: 'Please upload a payment receipt.' });
+      showError('Hold up! You forgot to upload the receipt! How am I supposed to verify thin air?');
       return;
     }
     setIsVerifying(true);
@@ -305,8 +319,11 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
         reason: "Payment verified successfully! You can now download your receipt."
       });
       setShowDownload(true);
+      // Show random sarcastic verification message
+      showVerification();
     } else {
       setVerificationResult(result);
+  showError(result.reason || 'Payment verification failed! Better double check that receipt!');
     }
 
     setIsVerifying(false);
@@ -315,7 +332,9 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
   const paidForTextbooks = new Set((transactions || []).map((t: { textbookName: string }) => t.textbookName));
 
   return (
-    <div className="grid gap-4 sm:gap-6 md:gap-8 lg:grid-cols-3">
+    <>
+      {PopupComponent}
+      <div className="grid gap-4 sm:gap-6 md:gap-8 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-4 sm:space-y-6 md:space-y-8">
         <Card>
           <CardHeader>
@@ -348,6 +367,26 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
             ))}
           </CardContent>
         </Card>
+
+        {isEligibleForBalancePayment() && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Info className="h-4 w-4 sm:h-5 sm:w-5" />
+                Balance Payment
+              </CardTitle>
+              <CardDescription className="text-sm">You have a remaining balance of ₦1,000 for Defense refreshment payment.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => router.push('/pay-balance')}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                Pay Balance (₦1,000)
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {transactions && transactions.length > 0 && (
           <Card>
@@ -404,6 +443,8 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
             </CardContent>
           </Card>
         )}
+
+        {/* Balance card moved above Payment History */}
       </div>
 
       <div>
@@ -443,7 +484,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                         <AlertDescription className="text-xs sm:text-sm">
                             Please transfer <strong>₦{totalAmount.toLocaleString()}</strong> to the account below:
                             <ul className="mt-2 list-none space-y-1 text-xs sm:text-sm">
-                                <li><strong>Bank:</strong> Opay</li>
+                                <li><strong>Bank:</strong> Palmpay</li>
                                 <li><strong>Account Number:</strong> 7065136040</li>
                                 <li><strong>Account Name:</strong> Mmegwa Uzonna Anthony</li>
                             </ul>
@@ -491,5 +532,6 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
         </Card>
       </div>
     </div>
+    </>
   );
 }
