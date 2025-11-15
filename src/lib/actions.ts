@@ -5,8 +5,6 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/server';
 import type { Textbook, Student, Transaction, ManualRecord, BalancePayment } from './data';
-import { verifyPaymentReceipt } from '@/ai/flows/verify-payment-receipt';
-import { verifyBalancePayment } from '@/ai/flows/verify-balance-payment';
 import { insertPaymentRecords } from '@/lib/records';
 import { revalidatePath } from 'next/cache';
 
@@ -232,8 +230,8 @@ export async function getTransactions(): Promise<Transaction[]> {
       textbookName: `${b.item_name} (Balance)`,
       totalAmount: b.amount,
       date: new Date(b.created_at).toISOString(),
-      isCollected: true,
-      collectedBy: 'AI Verified',
+      isCollected: !!b.verified,
+      collectedBy: b.verified ? 'Verified' : undefined,
       collectedAt: b.verified_at,
       receiptPath: b.receipt_text || undefined,
     })));
@@ -336,8 +334,8 @@ export async function getStudentTransactions(regNumber: string): Promise<Transac
       textbookName: `${b.item_name} (Balance)`,
       totalAmount: b.amount,
       date: new Date(b.created_at).toISOString(),
-      isCollected: true,
-      collectedBy: 'AI Verified',
+      isCollected: !!b.verified,
+      collectedBy: b.verified ? 'Verified' : undefined,
       collectedAt: b.verified_at,
       receiptPath: b.receipt_text || undefined,
     })));
@@ -484,8 +482,17 @@ export async function updateCollectionStatus(transactionId: string, collectedBy:
     })
     .eq('id', transactionId);
 
-  if (recordsError && manualError) {
-    console.error('Error updating collection status in both tables:', recordsError, manualError);
+  // Try to update in balance_payments table (treat as verification approval)
+  const { error: balanceError } = await supabase
+    .from('balance_payments')
+    .update({
+      verified: true,
+      verified_at: new Date().toISOString(),
+    })
+    .eq('id', transactionId);
+
+  if (recordsError && manualError && balanceError) {
+    console.error('Error updating collection status in all tables:', recordsError, manualError, balanceError);
     return { error: 'Failed to update collection status' };
   }
 
@@ -502,18 +509,6 @@ export async function submitBalancePayment(receiptDataUri: string) {
   if (!student) {
     throw new Error('Student not authenticated');
   }
-
-  // Verify the balance payment
-  const verification = await verifyBalancePayment({
-    receiptDataUri,
-    expectedAmount: 1000,
-    itemName: 'Defense refreshment payment balance'
-  });
-
-  if (!verification.isApproved) {
-    return verification;
-  }
-
   // Insert into balance_payments table
   const supabase = await createAdminClient();
   const { data, error } = await supabase
@@ -523,8 +518,8 @@ export async function submitBalancePayment(receiptDataUri: string) {
       item_name: 'Defense refreshment payment',
       amount: 1000,
       receipt_text: receiptDataUri,
-      verified: true,
-      verified_at: new Date().toISOString()
+      verified: false,
+      verified_at: null
     })
     .select()
     .single();
@@ -535,7 +530,7 @@ export async function submitBalancePayment(receiptDataUri: string) {
   }
 
   revalidatePath('/dashboard');
-  return verification;
+  return { isApproved: true, reason: 'Payment submitted and pending admin confirmation.' };
 }
 
 export async function verifyAndRecordPayment(
@@ -555,14 +550,7 @@ export async function verifyAndRecordPayment(
   const textbookList = cart.map(item => item.name);
 
   try {
-    const result = await verifyPaymentReceipt({
-      receiptDataUri,
-      expectedAmount: totalAmount,
-      textbookList: textbookList.join(', '),
-    });
-
-    if (result.isApproved) {
-      // Save receipt image to public/uploads/payments and get a public path
+    // Save receipt image to public/uploads/payments and get a public path
       const fs = await import('fs');
       const path = await import('path');
       const { randomUUID } = await import('crypto');
@@ -605,21 +593,19 @@ export async function verifyAndRecordPayment(
       if (error) {
         console.error('Error saving record:', error);
         return {
-          isApproved: true,
-          reason: `Payment approved, but failed to save record: ${error}. Please contact the administrator.`
+          isApproved: false,
+          reason: `Payment submitted, but failed to save record: ${error}. Please contact the administrator.`
         };
       }
       
       revalidatePath('/admin/dashboard');
       revalidatePath('/dashboard');
-    }
-
-    return result;
+    return { isApproved: true, reason: 'Payment submitted and pending admin confirmation.' };
   } catch (error) {
     console.error('AI verification failed:', error);
     return {
       isApproved: false,
-      reason: 'An error occurred during verification. Please try again later.',
+      reason: 'An error occurred. Please try again later.',
     };
   }
 }

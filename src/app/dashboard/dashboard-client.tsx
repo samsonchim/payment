@@ -390,16 +390,15 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
     setVerificationResult(null);
     const result = await verifyAndRecordPayment(cart, receiptDataUri);
 
-    if (result.isApproved) {
-      setVerificationResult({
-        isApproved: true,
-        reason: "Payment verified successfully! You can now download your receipt."
-      });
+    setVerificationResult(result);
+    const isPending = (result?.reason || '').toLowerCase().includes('pending');
+    if (result.isApproved && isPending) {
+      setShowDownload(false);
+      showSuccess(result.reason);
+    } else if (result.isApproved) {
       setShowDownload(true);
-      // Removed demotivational/verification popup per request
     } else {
-      setVerificationResult(result);
-  showError(result.reason || 'Payment verification failed! Better double check that receipt!');
+      showError(result.reason || 'Payment submission failed!');
     }
 
     setIsVerifying(false);
@@ -604,17 +603,26 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                     </div>
                     <Button className="w-full text-sm sm:text-base" onClick={handleVerify} disabled={isVerifying}>
                       {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Verify Payment
+                      Submit Payment
                     </Button>
                 </div>
                 
                 {verificationResult && (
                   <>
-                    <Alert variant={verificationResult.isApproved ? 'default' : 'destructive'} className={verificationResult.isApproved ? 'border-green-500' : ''}>
-                      {verificationResult.isApproved ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                      <AlertTitle className="text-sm sm:text-base">{verificationResult.isApproved ? 'Payment Approved' : 'Payment Rejected'}</AlertTitle>
-                      <AlertDescription className="text-xs sm:text-sm">{verificationResult.reason}</AlertDescription>
-                    </Alert>
+                    {(() => {
+                      const isPending = (verificationResult.reason || '').toLowerCase().includes('pending');
+                      const isApproved = verificationResult.isApproved && !isPending;
+                      return (
+                        <Alert
+                          variant={isPending ? 'default' : verificationResult.isApproved ? 'default' : 'destructive'}
+                          className={isPending ? 'border-blue-500' : verificationResult.isApproved ? 'border-green-500' : ''}
+                        >
+                          {verificationResult.isApproved ? <CheckCircle className={`h-4 w-4 ${isPending ? 'text-blue-500' : ''}`} /> : <XCircle className="h-4 w-4" />}
+                          <AlertTitle className="text-sm sm:text-base">{isPending ? 'Payment Submitted' : isApproved ? 'Payment Approved' : 'Payment Rejected'}</AlertTitle>
+                          <AlertDescription className="text-xs sm:text-sm">{verificationResult.reason}</AlertDescription>
+                        </Alert>
+                      );
+                    })()}
                     {verificationResult.isApproved && showDownload && (
                       <div style={{ marginTop: 24, textAlign: 'center' }}>
                         {/* Hidden receipt for PNG rendering */}

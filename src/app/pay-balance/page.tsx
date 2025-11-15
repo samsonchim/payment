@@ -54,21 +54,19 @@ export default function PayBalancePage() {
         body: JSON.stringify({ receiptDataUri }),
       });
       const result = await res.json();
-      setVerificationResult(result);
-
-      if (res.ok && result.isApproved) {
-        showSuccess('Balance payment verified! Your account is now fully settled!');
+      if (res.ok) {
+        const message = result?.message || 'Payment submitted and pending admin confirmation.';
+        setVerificationResult({ isApproved: true, reason: message });
+        showSuccess(message);
         setTimeout(() => {
           router.push('/dashboard');
         }, 2000);
-      } else if (!res.ok) {
-        showError(result?.error ?? 'Verification failed');
       } else {
-        showError(`Verification failed: ${result.reason}`);
+        showError(result?.error ?? 'Submission failed');
       }
     } catch (error) {
       console.error('Balance payment error:', error);
-      showError('Oops! Something went wrong during verification. Please try again!');
+      showError('Oops! Something went wrong. Please try again!');
     } finally {
       setIsVerifying(false);
     }
@@ -158,36 +156,55 @@ export default function PayBalancePage() {
               {isVerifying ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying Payment...
+                  Submitting...
                 </>
               ) : (
-                'Verify & Submit Payment'
+                'Submit Payment'
               )}
             </Button>
 
             {/* Verification Result */}
             {verificationResult && (
-              <div className={`p-4 rounded-lg ${
-                verificationResult.isApproved
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
-              }`}>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className={`h-5 w-5 ${
-                    verificationResult.isApproved ? 'text-green-500' : 'text-red-500'
-                  }`} />
-                  <span className={`font-medium ${
-                    verificationResult.isApproved ? 'text-green-800' : 'text-red-800'
-                  }`}>
-                    {verificationResult.isApproved ? 'Payment Approved!' : 'Payment Rejected'}
-                  </span>
-                </div>
-                <p className={`text-sm mt-1 ${
-                  verificationResult.isApproved ? 'text-green-700' : 'text-red-700'
-                }`}>
-                  {verificationResult.reason}
-                </p>
-              </div>
+              (() => {
+                const isPending = verificationResult.reason?.toLowerCase().includes('pending');
+                const isApproved = verificationResult.isApproved && !isPending;
+                const boxClass = isPending
+                  ? 'bg-blue-50 border border-blue-200'
+                  : isApproved
+                    ? 'bg-green-50 border border-green-200'
+                    : 'bg-red-50 border border-red-200';
+                const iconClass = isPending
+                  ? 'text-blue-500'
+                  : isApproved
+                    ? 'text-green-500'
+                    : 'text-red-500';
+                const titleClass = isPending
+                  ? 'text-blue-800'
+                  : isApproved
+                    ? 'text-green-800'
+                    : 'text-red-800';
+                const textClass = isPending
+                  ? 'text-blue-700'
+                  : isApproved
+                    ? 'text-green-700'
+                    : 'text-red-700';
+                const title = isPending
+                  ? 'Payment Submitted'
+                  : isApproved
+                    ? 'Payment Approved!'
+                    : 'Payment Rejected';
+                return (
+                  <div className={`p-4 rounded-lg ${boxClass}`}>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className={`h-5 w-5 ${iconClass}`} />
+                      <span className={`font-medium ${titleClass}`}>{title}</span>
+                    </div>
+                    <p className={`text-sm mt-1 ${textClass}`}>
+                      {verificationResult.reason}
+                    </p>
+                  </div>
+                );
+              })()
             )}
           </CardContent>
         </Card>

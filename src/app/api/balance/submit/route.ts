@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/server';
-import { verifyBalancePayment } from '@/ai/flows/verify-balance-payment';
 import fs from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
@@ -29,17 +28,6 @@ export async function POST(req: Request) {
     }
     if (!student || !student.regNumber) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify balance payment via AI flow
-    const verification = await verifyBalancePayment({
-      receiptDataUri,
-      expectedAmount: 1000,
-      itemName: 'Defense refreshment payment balance',
-    });
-
-    if (!verification.isApproved) {
-      return NextResponse.json(verification, { status: 200 });
     }
 
     // Save receipt image to public/uploads/balance_receipts
@@ -71,8 +59,8 @@ export async function POST(req: Request) {
         item_name: 'Defense refreshment payment',
         amount: 1000,
         receipt_text: publicPath,
-        verified: true,
-        verified_at: new Date().toISOString(),
+        verified: false,
+        verified_at: null,
       });
 
     if (error) {
@@ -80,7 +68,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Failed to record balance payment' }, { status: 500 });
     }
 
-    return NextResponse.json(verification, { status: 200 });
+    return NextResponse.json({ pending: true, message: 'Payment submitted and pending admin confirmation.' }, { status: 200 });
   } catch (e: any) {
     console.error('Balance submit error:', e);
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
