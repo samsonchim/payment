@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
-import { DemotivationTimer } from "@/components/demotivation-timer"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -36,7 +35,6 @@ export default function RootLayout({
           </footer>
         </div>
     <Toaster />
-    <DemotivationTimer />
       </body>
     </html>
   );

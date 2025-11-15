@@ -304,7 +304,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
   const [verificationResult, setVerificationResult] = useState<{ isApproved: boolean; reason: string } | null>(null);
   const [showDownload, setShowDownload] = useState(false);
   const receiptRef = useRef(null);
-  const { showSuccess, showError, showVerification, PopupComponent } = useSarcasticPopup();
+  const { showSuccess, showError, PopupComponent } = useSarcasticPopup();
   const router = useRouter();
 
   const totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
@@ -396,8 +396,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
         reason: "Payment verified successfully! You can now download your receipt."
       });
       setShowDownload(true);
-      // Show random sarcastic verification message
-      showVerification();
+      // Removed demotivational/verification popup per request
     } else {
       setVerificationResult(result);
   showError(result.reason || 'Payment verification failed! Better double check that receipt!');
@@ -411,13 +410,31 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
   return (
     <>
       {PopupComponent}
+      {/* Support link for issues */}
+      <div className="mb-3">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle className="text-sm">Need help?</AlertTitle>
+          <AlertDescription className="text-xs sm:text-sm flex items-center gap-2">
+            If you have issues, Message Me.
+            <a
+              href="https://wa.me/2349162035539"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-1 rounded border text-xs sm:text-sm hover:bg-accent"
+            >
+              Message Me on WhatsApp
+            </a>
+          </AlertDescription>
+        </Alert>
+      </div>
       {/* All-paid message */}
       {allPaid && (
         <div className="mb-4 relative">
           <Card>
             <CardHeader>
               <CardTitle>You have paid for everything</CardTitle>
-              <CardDescription>omo you too take this school serious</CardDescription>
+              <CardDescription>omo you too take this school something serious o!</CardDescription>
             </CardHeader>
           </Card>
           <Confetti active={allPaid} />
