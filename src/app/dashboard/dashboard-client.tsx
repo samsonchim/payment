@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -14,6 +15,58 @@ import type { Student, Textbook, Transaction } from '@/lib/data';
 import { ShoppingCart, CheckCircle, XCircle, Loader2, Info, History } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useRouter } from 'next/navigation';
+
+// Lightweight confetti component (no external deps)
+function Confetti({ active }: { active: boolean }) {
+  const [pieces, setPieces] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!active) return;
+    // inject keyframes once
+    if (typeof document !== 'undefined' && !document.getElementById('confetti-styles')) {
+      const style = document.createElement('style');
+      style.id = 'confetti-styles';
+      style.innerHTML = `@keyframes confetti-fall { to { transform: translateY(110vh) rotate(360deg); opacity: 0; } }`;
+      document.head.appendChild(style);
+    }
+
+    const count = 36;
+    setPieces(Array.from({ length: count }, (_, i) => i));
+    const cleanup = setTimeout(() => setPieces([]), 3500);
+    return () => clearTimeout(cleanup);
+  }, [active]);
+
+  if (!active || pieces.length === 0) return null;
+
+  const colors = ['#E53E3E', '#ED8936', '#ECC94B', '#38A169', '#319795', '#667EEA', '#9F7AEA'];
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[10000]">
+      {pieces.map((p) => {
+        const left = Math.random() * 100;
+        const delay = Math.random() * 0.5;
+        const dur = 2.5 + Math.random() * 1;
+        const bg = colors[Math.floor(Math.random() * colors.length)];
+        const rotate = Math.floor(Math.random() * 360);
+        const transformOrigin = Math.random() > 0.5 ? 'left' : 'right';
+        return (
+          <div
+            key={p}
+            style={{
+              left: `${left}%`,
+              top: '-10%',
+              background: bg,
+              transform: `rotate(${rotate}deg)`,
+              animation: `confetti-fall ${dur}s linear ${delay}s forwards`,
+              transformOrigin,
+            }}
+            className="absolute w-1.5 h-4 rounded-sm opacity-90"
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 // For PNG receipt generation
 // @ts-ignore
@@ -277,6 +330,30 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
     return totalPaid === 2000;
   };
 
+  // Detect if the student has already paid the defense balance (any balance entry)
+  const hasPaidBalance = (transactions || []).some(t => {
+    const n = (t.textbookName || '').toLowerCase();
+    return n.includes('defense refreshment payment') && n.includes('balance');
+  });
+
+  // Helper to compute total paid for a given textbook (includes balance entries)
+  const totalPaidForBook = (bookName: string) => {
+    const target = (bookName || '').toLowerCase().trim();
+    return (transactions || []).reduce((sum, t) => {
+      const tn = (t.textbookName || '').toLowerCase();
+      if (tn.startsWith(target)) {
+        return sum + (Number(t.totalAmount) || 0);
+      }
+      return sum;
+    }, 0);
+  };
+
+  // Determine if student has paid for every textbook (amount >= price for each)
+  const allPaid = textbooks && textbooks.length > 0 && textbooks.every(tb => {
+    const paid = totalPaidForBook(tb.name);
+    return paid >= tb.price;
+  });
+
   const addToCart = (book: Textbook) => {
     if (!cart.find(item => item.id === book.id)) {
   setCart([...cart, book]);
@@ -334,6 +411,18 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
   return (
     <>
       {PopupComponent}
+      {/* All-paid message */}
+      {allPaid && (
+        <div className="mb-4 relative">
+          <Card>
+            <CardHeader>
+              <CardTitle>You have paid for everything</CardTitle>
+              <CardDescription>omo you too take this school serious</CardDescription>
+            </CardHeader>
+          </Card>
+          <Confetti active={allPaid} />
+        </div>
+      )}
       <div className="grid gap-4 sm:gap-6 md:gap-8 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-4 sm:space-y-6 md:space-y-8">
         <Card>
@@ -368,14 +457,14 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
           </CardContent>
         </Card>
 
-        {isEligibleForBalancePayment() && (
+        {isEligibleForBalancePayment() && !hasPaidBalance && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <Info className="h-4 w-4 sm:h-5 sm:w-5" />
                 Balance Payment
               </CardTitle>
-              <CardDescription className="text-sm">You have a remaining balance of ₦1,000 for Defense refreshment payment.</CardDescription>
+                <CardDescription className="text-sm">You have a remaining balance of ₦1,000 for Defense refreshment payment.</CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
@@ -447,8 +536,9 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
         {/* Balance card moved above Payment History */}
       </div>
 
-      <div>
-        <Card className="sticky top-4 sm:top-6 lg:top-24">
+      {!allPaid && (
+        <div>
+          <Card className="sticky top-4 sm:top-6 lg:top-24">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" /> Your Cart
@@ -529,8 +619,9 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
               </div>
             )}
           </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </div>
+      )}
     </div>
     </>
   );
