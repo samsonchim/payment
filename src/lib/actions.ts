@@ -180,7 +180,8 @@ export async function getTransactions(): Promise<Transaction[]> {
       date: new Date(t.created_at).toISOString(),
       isCollected: t.isCollected || false,
       collectedBy: t.collectedBy,
-      collectedAt: t.collectedAt
+      collectedAt: t.collectedAt,
+      receiptPath: t.receipt_text || undefined,
     })));
   }
 
@@ -283,7 +284,8 @@ export async function getStudentTransactions(regNumber: string): Promise<Transac
       date: new Date(t.created_at).toISOString(),
       isCollected: t.isCollected || false,
       collectedBy: t.collectedBy,
-      collectedAt: t.collectedAt
+      collectedAt: t.collectedAt,
+      receiptPath: t.receipt_text || undefined,
     })));
   }
 
@@ -560,12 +562,43 @@ export async function verifyAndRecordPayment(
     });
 
     if (result.isApproved) {
+      // Save receipt image to public/uploads/payments and get a public path
+      const fs = await import('fs');
+      const path = await import('path');
+      const { randomUUID } = await import('crypto');
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'payments');
+      try {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      } catch (e) {
+        // ignore
+      }
+
+      let publicPath = '';
+      const match = receiptDataUri.match(/^data:(image\/[^;]+);base64,(.+)$/);
+      if (match) {
+        const mime = match[1];
+        const b64 = match[2];
+        const ext = mime.split('/')[1] || 'png';
+        const fileName = `${randomUUID()}.${ext}`;
+        const filePath = path.join(uploadsDir, fileName);
+        try {
+          fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
+          publicPath = `/uploads/payments/${fileName}`;
+        } catch (e) {
+          console.error('Failed to write receipt file:', e);
+          publicPath = receiptDataUri; // fallback
+        }
+      } else {
+        publicPath = receiptDataUri;
+      }
+
       const { error } = await insertPaymentRecords(
         cart.map(book => ({
           studentName: student.name,
           regNumber: student.regNumber,
           itemName: book.name,
           amountPaid: book.price,
+          receiptText: publicPath,
         }))
       );
 

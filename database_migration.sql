@@ -44,6 +44,10 @@ CREATE TABLE IF NOT EXISTS balance_payments (
   created_at timestamp with time zone DEFAULT now()
 );
 
+-- Add optional receipt column to records table so general payments can store receipts
+ALTER TABLE records
+ADD COLUMN IF NOT EXISTS receipt_text text;
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_balance_payments_reg_number ON balance_payments(student_reg_number);
 CREATE INDEX IF NOT EXISTS idx_balance_payments_verified ON balance_payments(verified);

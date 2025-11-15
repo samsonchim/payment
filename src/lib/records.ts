@@ -11,6 +11,7 @@ export type NewRecordInput = {
   isCollected?: boolean; // optional, defaults to false
   collectedBy?: string;
   collectedAt?: string | Date;
+  receiptText?: string; // optional public path or data-uri for attached receipt
 };
 
 /**
@@ -40,6 +41,7 @@ export async function insertPaymentRecords(records: NewRecordInput[]) {
       const d = new Date(r.collectedAt);
       if (!isNaN(d.getTime())) base.collectedAt = d.toISOString();
     }
+    if (r.receiptText) base.receipt_text = r.receiptText;
     return base;
   });
 
