@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/server';
 import { verifyBalancePayment } from '@/ai/flows/verify-balance-payment';
+import fs from 'fs';
+import path from 'path';
+import { randomUUID } from 'crypto';
 
 export async function POST(req: Request) {
   try {
@@ -39,7 +42,27 @@ export async function POST(req: Request) {
       return NextResponse.json(verification, { status: 200 });
     }
 
-    // Record balance payment
+    // Save receipt image to public/uploads/balance_receipts
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'balance_receipts');
+    fs.mkdirSync(uploadsDir, { recursive: true });
+
+    // Parse data URI
+    const match = receiptDataUri.match(/^data:(image\/[^;]+);base64,(.+)$/);
+    let publicPath = '';
+    if (match) {
+      const mime = match[1];
+      const b64 = match[2];
+      const ext = mime.split('/')[1] || 'png';
+      const fileName = `${randomUUID()}.${ext}`;
+      const filePath = path.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
+      publicPath = `/uploads/balance_receipts/${fileName}`;
+    } else {
+      // Fallback: store entire data URI (shouldn't usually happen)
+      publicPath = receiptDataUri;
+    }
+
+    // Record balance payment with stored path
     const supabase = await createAdminClient();
     const { error } = await supabase
       .from('balance_payments')
@@ -47,7 +70,7 @@ export async function POST(req: Request) {
         student_reg_number: student.regNumber,
         item_name: 'Defense refreshment payment',
         amount: 1000,
-        receipt_text: receiptDataUri,
+        receipt_text: publicPath,
         verified: true,
         verified_at: new Date().toISOString(),
       });

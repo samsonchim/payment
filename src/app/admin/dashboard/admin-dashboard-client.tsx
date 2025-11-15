@@ -95,24 +95,19 @@ export function AdminDashboardClient({
   const [textbooks, setTextbooks] = useState(initialTextbooks);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [students, setStudents] = useState(initialStudents);
-  // Pagination state for Payment Records
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10; // items per page
-
-  const totalPages = Math.max(1, Math.ceil((transactions?.length || 0) / pageSize));
-  const startIdx = (currentPage - 1) * pageSize;
-  const paginatedTransactions = (transactions || []).slice(startIdx, startIdx + pageSize);
+  
 
   // Keep local state in sync when server props refresh
   useEffect(() => { 
     setTransactions(initialTransactions);
-    setCurrentPage(1); // reset to first page when data refreshes
   }, [initialTransactions]);
   useEffect(() => { setTextbooks(initialTextbooks); }, [initialTextbooks]);
   useEffect(() => { setStudents(initialStudents); }, [initialStudents]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [collectionDialogOpen, setCollectionDialogOpen] = useState(false);
   const [collectingTransactionId, setCollectingTransactionId] = useState<string | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   
   // Initialize collected state from database data
   const [collected, setCollected] = useState<Record<string, { by: string, date: string }>>(() => {
@@ -367,28 +362,7 @@ export function AdminDashboardClient({
               <Button size="sm" variant="outline" className="gap-1" onClick={() => router.push('/admin/manual-records')}>
                 Show Manual Records
               </Button>
-              {/* Pagination controls (header) */}
-              <div className="ml-auto flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+              
             </div>
             <div>
               <CardTitle>Payment Records</CardTitle>
@@ -411,8 +385,8 @@ export function AdminDashboardClient({
                       </TableRow>
                   </TableHeader>
                   <TableBody>
-                      {transactions.length > 0 ? (
-                          paginatedTransactions.map((t, i) => (
+                        {transactions.length > 0 ? (
+                          transactions.map((t, i) => (
                               <TableRow key={t.id}>
                                   <TableCell>{t.studentName}</TableCell>
                                   <TableCell>{t.regNumber}</TableCell>
@@ -433,14 +407,25 @@ export function AdminDashboardClient({
                                     )}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                      onClick={() => handleDeleteTransaction(t)}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    <div className="flex items-center justify-end gap-2">
+                                      {t.receiptPath && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => { setSelectedReceipt(t.receiptPath ?? null); setReceiptDialogOpen(true); }}
+                                        >
+                                          View Receipt
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        onClick={() => handleDeleteTransaction(t)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
                                   </TableCell>
                               </TableRow>
                           ))
@@ -452,36 +437,47 @@ export function AdminDashboardClient({
                   </TableBody>
               </Table>
 
-              {/* Pagination controls (footer) */}
-              {transactions.length > pageSize && (
-                <div className="mt-4 flex items-center justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
+              
               <CollectionDialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen} onConfirm={confirmCollect} />
           </CardContent>
         </Card>
     </TabsContent>
     </Tabs>
     
+    {/* Receipt Preview Dialog */}
+    <Dialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Receipt Preview</DialogTitle>
+          <DialogDescription>Preview the uploaded receipt image and download or copy its link.</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center gap-4">
+          {selectedReceipt ? (
+            <>
+              <img src={selectedReceipt} alt="Receipt" className="max-h-[60vh] w-auto rounded shadow" />
+              <div className="flex items-center gap-2">
+                <a href={selectedReceipt} download>
+                  <Button>Download</Button>
+                </a>
+                <Button variant="outline" onClick={() => {
+                  try {
+                    const href = selectedReceipt?.startsWith('http') ? selectedReceipt : (window.location.origin + selectedReceipt);
+                    navigator.clipboard?.writeText(href);
+                    toast({ title: 'Receipt link copied to clipboard' });
+                  } catch (e) {
+                    toast({ variant: 'destructive', title: 'Unable to copy link' });
+                  }
+                }}>Copy Link</Button>
+                <Button variant="ghost" onClick={() => { setSelectedReceipt(null); setReceiptDialogOpen(false); }}>Close</Button>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">No receipt selected.</p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+
     {/* Delete Transaction Confirmation Dialog */}
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
       <AlertDialogContent>

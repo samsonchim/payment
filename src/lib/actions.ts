@@ -211,16 +211,30 @@ export async function getTransactions(): Promise<Transaction[]> {
 
   // Map balance payments
   if (balanceData) {
-    transactions.push(...balanceData.map(b => ({
+    // Resolve student names for balance entries in batch
+    const regNumbers = Array.from(new Set(balanceData.map((b: any) => b.student_reg_number)));
+    let studentMap: Record<string, string> = {};
+    if (regNumbers.length > 0) {
+      const { data: studentsList } = await supabase
+        .from('students')
+        .select('reg_number, name')
+        .in('reg_number', regNumbers);
+      if (studentsList) {
+        studentsList.forEach((s: any) => { studentMap[s.reg_number] = s.name; });
+      }
+    }
+
+    transactions.push(...balanceData.map((b: any) => ({
       id: b.id,
-      studentName: '', // Not stored, but can be fetched from student
+      studentName: studentMap[b.student_reg_number] || '',
       regNumber: b.student_reg_number,
       textbookName: `${b.item_name} (Balance)`,
       totalAmount: b.amount,
       date: new Date(b.created_at).toISOString(),
-      isCollected: true, // Balance payments are considered collected
+      isCollected: true,
       collectedBy: 'AI Verified',
-      collectedAt: b.verified_at
+      collectedAt: b.verified_at,
+      receiptPath: b.receipt_text || undefined,
     })));
   }
 
@@ -300,16 +314,30 @@ export async function getStudentTransactions(regNumber: string): Promise<Transac
   }
 
   if (balanceData) {
+    // Fetch the student's name for this regNumber
+    let studentName = '';
+    try {
+      const { data: stu, error: stuErr } = await supabase
+        .from('students')
+        .select('name')
+        .eq('reg_number', regNumber)
+        .single();
+      if (!stuErr && stu) studentName = stu.name;
+    } catch (e) {
+      // ignore
+    }
+
     transactions.push(...balanceData.map(b => ({
       id: b.id,
-      studentName: '', // Not stored in table
+      studentName: studentName || '',
       regNumber: b.student_reg_number,
       textbookName: `${b.item_name} (Balance)`,
       totalAmount: b.amount,
       date: new Date(b.created_at).toISOString(),
       isCollected: true,
       collectedBy: 'AI Verified',
-      collectedAt: b.verified_at
+      collectedAt: b.verified_at,
+      receiptPath: b.receipt_text || undefined,
     })));
   }
 

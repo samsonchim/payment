@@ -20,6 +20,7 @@ export interface Transaction {
   isCollected?: boolean;
   collectedBy?: string;
   collectedAt?: string;
+  receiptPath?: string;
 }
 
 export interface ManualRecord {
@@ -39,7 +40,7 @@ export interface BalancePayment {
   studentRegNumber: string;
   itemName: string;
   amount: number;
-  receiptText: string;
+  receiptPath: string;
   verified: boolean;
   verifiedAt?: string;
   createdAt: string;
