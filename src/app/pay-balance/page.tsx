@@ -31,7 +31,7 @@ export default function PayBalancePage() {
         const result = event.target?.result as string;
         if (result) {
           setReceiptDataUri(result);
-          showSuccess('Receipt uploaded! Ready for verification!');
+          showSuccess('Receipt uploaded! Ready to submit.');
         }
       };
       reader.readAsDataURL(file);
