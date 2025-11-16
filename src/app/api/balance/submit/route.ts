@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     }
 
     // Get student session from cookie
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
     const sessionCookie = cookieStore.get('student_session');
     if (!sessionCookie?.value) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -32,7 +32,11 @@ export async function POST(req: Request) {
 
     // Save receipt image to public/uploads/balance_receipts
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'balance_receipts');
-    fs.mkdirSync(uploadsDir, { recursive: true });
+    try {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    } catch (e) {
+      // ignore mkdir errors; we'll fall back to data URI if needed
+    }
 
     // Parse data URI
     const match = receiptDataUri.match(/^data:(image\/[^;]+);base64,(.+)$/);
@@ -43,8 +47,13 @@ export async function POST(req: Request) {
       const ext = mime.split('/')[1] || 'png';
       const fileName = `${randomUUID()}.${ext}`;
       const filePath = path.join(uploadsDir, fileName);
-      fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
-      publicPath = `/uploads/balance_receipts/${fileName}`;
+      try {
+        fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
+        publicPath = `/uploads/balance_receipts/${fileName}`;
+      } catch (e) {
+        // If writing fails (e.g., read-only FS), keep the data URI
+        publicPath = receiptDataUri;
+      }
     } else {
       // Fallback: store entire data URI (shouldn't usually happen)
       publicPath = receiptDataUri;
