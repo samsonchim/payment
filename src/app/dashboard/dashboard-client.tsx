@@ -299,10 +299,9 @@ interface DashboardClientProps {
 
 export function DashboardClient({ student, textbooks, transactions }: DashboardClientProps) {
   const [cart, setCart] = useState<Textbook[]>([]);
-  const [receiptDataUri, setReceiptDataUri] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<{ isApproved: boolean; reason: string } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [showDownload, setShowDownload] = useState(false);
+  const [receiptData, setReceiptData] = useState<any>(null);
   const receiptRef = useRef(null);
   const { showSuccess, showError, PopupComponent } = useSarcasticPopup();
   const router = useRouter();
@@ -313,28 +312,6 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   }
-
-  // Check if student is eligible for balance payment (paid exactly ₦2,000 for Defense refreshment)
-  const isEligibleForBalancePayment = () => {
-    const normalize = (s?: string) => (s || '').toLowerCase().trim();
-    const isDefenseBase = (name?: string) => {
-      const n = normalize(name);
-      // Accept common variants, exclude any balance entries
-      const isDefense = n === 'defense refreshment payment' || n === 'defence refreshment payment';
-      const isBalanceTag = n.includes('(balance)');
-      return isDefense && !isBalanceTag;
-    };
-
-    const relevant = transactions.filter(t => isDefenseBase(t.textbookName));
-    const totalPaid = relevant.reduce((sum, t) => sum + (Number(t.totalAmount) || 0), 0);
-    return totalPaid === 2000;
-  };
-
-  // Detect if the student has already paid the defense balance (any balance entry)
-  const hasPaidBalance = (transactions || []).some(t => {
-    const n = (t.textbookName || '').toLowerCase();
-    return n.includes('defense refreshment payment') && n.includes('balance');
-  });
 
   // Helper to compute total paid for a given textbook (includes balance entries)
   const totalPaidForBook = (bookName: string) => {
@@ -365,44 +342,71 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
     setCart(cart.filter(item => item.id !== bookId));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-    if (file.size > 4 * 1024 * 1024) { // 4MB limit
-      showError('Whoa there! That file is bigger than your hopes and dreams! Keep it under 4MB, please!');
-          e.target.value = ''; // Reset file input
-          return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReceiptDataUri(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleVerify = async () => {
-    if (!receiptDataUri) {
-      showError('Hold up! You forgot to upload the receipt! How am I supposed to verify thin air?');
+  const handleFlutterwavePayment = async () => {
+    if (cart.length === 0) {
+      showError('Your cart is empty!');
       return;
     }
-    setIsVerifying(true);
-    setVerificationResult(null);
-    const result = await verifyAndRecordPayment(cart, receiptDataUri);
 
-    setVerificationResult(result);
-    const isPending = (result?.reason || '').toLowerCase().includes('pending');
-    if (result.isApproved && isPending) {
-      setShowDownload(false);
-      showSuccess(result.reason);
-    } else if (result.isApproved) {
-      setShowDownload(true);
-    } else {
-      showError(result.reason || 'Payment submission failed!');
+    setIsProcessing(true);
+
+    try {
+      const response = await fetch('/api/flutterwave/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: totalAmount,
+          textbooks: cart.map(b => ({ name: b.name, price: b.price })),
+          email: `${student.regNumber}@student.com`,
+          name: student.name,
+          regNumber: student.regNumber
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'success') {
+        // Redirect to Flutterwave payment page
+        window.location.href = data.data.link;
+      } else {
+        showError(data.error || 'Failed to initialize payment');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      showError('An error occurred. Please try again.');
+      setIsProcessing(false);
     }
-
-    setIsVerifying(false);
   };
+
+  // Check for payment callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const receiptParam = params.get('receipt');
+
+    if (paymentStatus === 'success' && receiptParam) {
+      try {
+        const data = JSON.parse(decodeURIComponent(receiptParam));
+        setReceiptData(data);
+        setShowDownload(true);
+        showSuccess('Payment successful! You can now download your receipt.');
+        // Clean URL
+        window.history.replaceState({}, '', '/dashboard');
+      } catch (e) {
+        console.error('Error parsing receipt:', e);
+      }
+    } else if (paymentStatus === 'cancelled') {
+      showError('Payment was cancelled');
+      window.history.replaceState({}, '', '/dashboard');
+    } else if (paymentStatus === 'failed') {
+      showError('Payment failed. Please try again.');
+      window.history.replaceState({}, '', '/dashboard');
+    } else if (paymentStatus === 'error') {
+      showError('An error occurred during payment.');
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
   
   const paidForTextbooks = new Set((transactions || []).map((t: { textbookName: string }) => t.textbookName));
 
@@ -472,26 +476,6 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
             ))}
           </CardContent>
         </Card>
-
-        {isEligibleForBalancePayment() && !hasPaidBalance && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <Info className="h-4 w-4 sm:h-5 sm:w-5" />
-                Balance Payment
-              </CardTitle>
-                <CardDescription className="text-sm">You have a remaining balance of ₦1,000 for Defense refreshment payment.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={() => router.push('/pay-balance')}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                Pay Balance (₦1,000)
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         {transactions && transactions.length > 0 && (
           <Card>
@@ -584,62 +568,56 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                 </div>
                 <Separator />
                 <div className='space-y-3 sm:space-y-4'>
-                    <Alert variant="default" className="border-accent">
-                        <Info className="h-4 w-4 !text-accent" />
-                        <AlertTitle className="text-sm sm:text-base">Payment Information</AlertTitle>
-                        <AlertDescription className="text-xs sm:text-sm">
-                            Please transfer <strong>₦{totalAmount.toLocaleString()}</strong> to the account below:
-                            <ul className="mt-2 list-none space-y-1 text-xs sm:text-sm">
-                                <li><strong>Bank:</strong> Opay</li>
-                                <li><strong>Account Number:</strong> 7065136040</li>
-                                <li><strong>Account Name:</strong> Mmegwa Uzonna Anthony</li>
-                            </ul>
+                    <Alert variant="default" className="border-green-500 bg-green-50">
+                        <Info className="h-4 w-4 !text-green-600" />
+                        <AlertTitle className="text-sm sm:text-base text-green-900">Secure Payment</AlertTitle>
+                        <AlertDescription className="text-xs sm:text-sm text-green-800">
+                          Click to pay.
                         </AlertDescription>
                     </Alert>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="receipt" className="text-sm sm:text-base">Upload Payment Receipt</Label>
-                      <Input id="receipt" type="file" accept="image/*" onChange={handleFileChange} className="text-sm" />
-                    </div>
-                    <Button className="w-full text-sm sm:text-base" onClick={handleVerify} disabled={isVerifying}>
-                      {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Submit Payment
+                    <Button 
+                      className="w-full text-sm sm:text-base bg-orange-500 hover:bg-orange-600" 
+                      onClick={handleFlutterwavePayment} 
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        `Pay ₦${totalAmount.toLocaleString()} with Flutterwave`
+                      )}
                     </Button>
                 </div>
                 
-                {verificationResult && (
-                  <>
-                    {(() => {
-                      const isPending = (verificationResult.reason || '').toLowerCase().includes('pending');
-                      const isApproved = verificationResult.isApproved && !isPending;
-                      return (
-                        <Alert
-                          variant={isPending ? 'default' : verificationResult.isApproved ? 'default' : 'destructive'}
-                          className={isPending ? 'border-blue-500' : verificationResult.isApproved ? 'border-green-500' : ''}
-                        >
-                          {verificationResult.isApproved ? <CheckCircle className={`h-4 w-4 ${isPending ? 'text-blue-500' : ''}`} /> : <XCircle className="h-4 w-4" />}
-                          <AlertTitle className="text-sm sm:text-base">{isPending ? 'Payment Submitted' : isApproved ? 'Payment Approved' : 'Payment Rejected'}</AlertTitle>
-                          <AlertDescription className="text-xs sm:text-sm">{verificationResult.reason}</AlertDescription>
-                        </Alert>
-                      );
-                    })()}
-                    {verificationResult.isApproved && showDownload && (
+                {showDownload && receiptData && (
                       <div style={{ marginTop: 24, textAlign: 'center' }}>
-                        {/* Hidden receipt for PNG rendering */}
-                        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-                          <div ref={receiptRef}>
-                            <ReceiptContent userName={student?.name || 'User'} items={cart} total={totalAmount} />
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => downloadReceiptAsPng(receiptRef, student?.name || 'User')}
-                          className="mt-2 text-sm sm:text-base"
-                        >
-                          Download Receipt (PNG)
-                        </Button>
+                    {/* Hidden receipt for PNG rendering */}
+                    <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+                      <div ref={receiptRef}>
+                        <ReceiptContent 
+                          userName={receiptData.studentName || student?.name || 'User'} 
+                          items={receiptData.textbooks || []} 
+                          total={receiptData.amount || 0} 
+                        />
                       </div>
-                    )}
-                  </>
+                    </div>
+                    <Alert className="border-green-500 bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertTitle className="text-sm sm:text-base text-green-900">Payment Successful!</AlertTitle>
+                      <AlertDescription className="text-xs sm:text-sm text-green-800">
+                        Transaction Reference: <strong>{receiptData.tx_ref}</strong>
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={() => downloadReceiptAsPng(receiptRef, receiptData.studentName || student?.name || 'User')}
+                      className="w-full mt-2 text-sm sm:text-base"
+                    >
+                      Download Receipt (PNG)
+                    </Button>
+                  </div>
                 )}
               </div>
             )}

@@ -1,76 +1,72 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useSarcasticPopup } from '@/components/sarcastic-popup';
-import { Loader2, Upload, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function PayBalancePage() {
-  const [receiptDataUri, setReceiptDataUri] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<{ isApproved: boolean; reason: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { showSuccess, showError, PopupComponent } = useSarcasticPopup();
   const router = useRouter();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 4 * 1024 * 1024) { // 4MB limit
-        showError('Whoa there! That file is bigger than your hopes and dreams! Keep it under 4MB, please!');
-        e.target.value = ''; // Reset file input
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          setReceiptDataUri(result);
-          showSuccess('Receipt uploaded! Ready to submit.');
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!receiptDataUri) {
-      showError('Please upload a receipt first!');
-      return;
-    }
-
-    setIsVerifying(true);
-    setVerificationResult(null);
+  const handleFlutterwavePayment = async () => {
+    setIsProcessing(true);
 
     try {
-      const res = await fetch('/api/balance/submit', {
+      const response = await fetch('/api/flutterwave/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receiptDataUri }),
+        body: JSON.stringify({
+          amount: 1000,
+          textbooks: [{ name: 'Defense refreshment payment (Balance)', price: 1000 }],
+          email: '', // Will use student session email
+          name: '', // Will use student session name
+          regNumber: '', // Will use student session
+          paymentType: 'balance'
+        })
       });
-      const result = await res.json();
-      if (res.ok) {
-        const message = result?.message || 'Payment submitted and pending admin confirmation.';
-        setVerificationResult({ isApproved: true, reason: message });
-        showSuccess(message);
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2000);
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'success') {
+        // Redirect to Flutterwave payment page
+        window.location.href = data.data.link;
       } else {
-        showError(result?.error ?? 'Submission failed');
+        showError(data.error || 'Failed to initialize payment');
+        setIsProcessing(false);
       }
     } catch (error) {
-      console.error('Balance payment error:', error);
-      showError('Oops! Something went wrong. Please try again!');
-    } finally {
-      setIsVerifying(false);
+      console.error('Payment error:', error);
+      showError('An error occurred. Please try again.');
+      setIsProcessing(false);
     }
   };
+
+  // Check for payment callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const type = params.get('type');
+
+    if (paymentStatus === 'success' && type === 'balance') {
+      showSuccess('Balance payment successful! Redirecting...');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+    } else if (paymentStatus === 'cancelled') {
+      showError('Payment was cancelled');
+      window.history.replaceState({}, '', '/pay-balance');
+    } else if (paymentStatus === 'failed') {
+      showError('Payment failed. Please try again.');
+      window.history.replaceState({}, '', '/pay-balance');
+    } else if (paymentStatus === 'error') {
+      showError('An error occurred during payment.');
+      window.history.replaceState({}, '', '/pay-balance');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -85,127 +81,41 @@ export default function PayBalancePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Account Details */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="font-semibold text-yellow-800 mb-2">Payment Details</h3>
+            {/* Payment Info */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Secure Payment
+              </h3>
               <div className="space-y-1 text-sm">
                 <p><strong>Amount:</strong> ₦1,000</p>
-                <p><strong>Account Name:</strong> Promise Ogbu Ucha</p>
-                <p className="text-xs text-muted-foreground">(Also accepted: Promise Ucha Ogbu, Ogbu Ucha Promise)</p>
-                <p><strong>Account Number:</strong> 9135315917</p>
-                <p><strong>Bank:</strong> Opay or Opay MFB</p>
                 <p><strong>Description:</strong> Defense refreshment payment balance</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Pay securely with your card or bank transfer via Flutterwave
+                </p>
               </div>
             </div>
 
-            {/* Receipt Upload */}
-            <div className="space-y-4">
-              <Label htmlFor="receipt" className="text-base font-medium">
-                Upload Payment Receipt
-              </Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="receipt"
-                />
-                <div className="space-y-4">
-                  {receiptDataUri ? (
-                    <div className="space-y-2">
-                      <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-                      <p className="text-sm text-gray-600">Receipt uploaded successfully!</p>
-                      <img
-                        src={receiptDataUri}
-                        alt="Receipt preview"
-                        className="max-w-full h-48 object-contain mx-auto border rounded"
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Upload className="h-12 w-12 text-gray-400 mx-auto" />
-                      <p className="text-sm text-gray-600">
-                        Click to upload your payment receipt
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        PNG, JPG up to 4MB
-                      </p>
-                    </div>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isVerifying}
-                  >
-                    {receiptDataUri ? 'Change Receipt' : 'Select Receipt'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
+            {/* Payment Button */}
             <Button
-              onClick={handleSubmit}
-              disabled={!receiptDataUri || isVerifying}
-              className="w-full"
+              onClick={handleFlutterwavePayment}
+              disabled={isProcessing}
+              className="w-full bg-orange-500 hover:bg-orange-600"
               size="lg"
             >
-              {isVerifying ? (
+              {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  Processing...
                 </>
               ) : (
-                'Submit Payment'
+                'Pay ₦1,000 with Flutterwave'
               )}
             </Button>
 
-            {/* Verification Result */}
-            {verificationResult && (
-              (() => {
-                const isPending = verificationResult.reason?.toLowerCase().includes('pending');
-                const isApproved = verificationResult.isApproved && !isPending;
-                const boxClass = isPending
-                  ? 'bg-blue-50 border border-blue-200'
-                  : isApproved
-                    ? 'bg-green-50 border border-green-200'
-                    : 'bg-red-50 border border-red-200';
-                const iconClass = isPending
-                  ? 'text-blue-500'
-                  : isApproved
-                    ? 'text-green-500'
-                    : 'text-red-500';
-                const titleClass = isPending
-                  ? 'text-blue-800'
-                  : isApproved
-                    ? 'text-green-800'
-                    : 'text-red-800';
-                const textClass = isPending
-                  ? 'text-blue-700'
-                  : isApproved
-                    ? 'text-green-700'
-                    : 'text-red-700';
-                const title = isPending
-                  ? 'Payment Submitted'
-                  : isApproved
-                    ? 'Payment Approved!'
-                    : 'Payment Rejected';
-                return (
-                  <div className={`p-4 rounded-lg ${boxClass}`}>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className={`h-5 w-5 ${iconClass}`} />
-                      <span className={`font-medium ${titleClass}`}>{title}</span>
-                    </div>
-                    <p className={`text-sm mt-1 ${textClass}`}>
-                      {verificationResult.reason}
-                    </p>
-                  </div>
-                );
-              })()
-            )}
+            <div className="text-center text-sm text-muted-foreground">
+              <p>Secure payment powered by Flutterwave</p>
+            </div>
           </CardContent>
         </Card>
       </div>

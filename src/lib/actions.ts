@@ -501,38 +501,6 @@ export async function updateCollectionStatus(transactionId: string, collectedBy:
   return { success: true };
 }
 
-
-// --- Balance Payment Actions ---
-
-export async function submitBalancePayment(receiptDataUri: string) {
-  const student = await getStudentSession();
-  if (!student) {
-    throw new Error('Student not authenticated');
-  }
-  // Insert into balance_payments table
-  const supabase = await createAdminClient();
-  const { data, error } = await supabase
-    .from('balance_payments')
-    .insert({
-      student_reg_number: student.regNumber,
-      item_name: 'Defense refreshment payment',
-      amount: 1000,
-      receipt_text: receiptDataUri,
-      verified: false,
-      verified_at: null
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error inserting balance payment:', error);
-    throw new Error('Failed to record balance payment');
-  }
-
-  revalidatePath('/dashboard');
-  return { isApproved: true, reason: 'Payment submitted and pending admin confirmation.' };
-}
-
 export async function verifyAndRecordPayment(
   cart: Textbook[],
   receiptDataUri: string,
