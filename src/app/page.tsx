@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { loginStudent } from '@/lib/actions';
 import { AppLogo } from '@/components/icons';
+import { FestiveDecor } from '@/components/festive-decor';
 import { Preloader } from '@/components/preloader';
 import { useSarcasticPopup } from '@/components/sarcastic-popup';
 
@@ -58,15 +59,14 @@ export default function StudentLoginPage() {
         <div className="w-full max-w-md">
           {/* Welcome Banner */}
           <div className="mb-6 text-center">
-            <h1 className="text-4xl font-bold text-green-700 mb-2 animate-pulse">
-              Welcome to 300L Folks!
-            </h1>
+         
             <p className="text-green-600 font-medium">
-              Time to pay up and level up!
+           { /*  Time to pay up and level up! */}
             </p>
           </div>
-
-          <Card className="shadow-xl border-green-200">
+          <div className="relative">
+            <FestiveDecor />
+            <Card className="shadow-xl border-green-200">
             <CardHeader className="text-center bg-gradient-to-br from-green-50 to-white">
               <div className="mx-auto mb-4">
                 <AppLogo />
@@ -89,7 +89,8 @@ export default function StudentLoginPage() {
                 <SubmitButton />
               </form>
             </CardContent>
-          </Card>
+            </Card>
+          </div>
           <p className="mt-4 text-center text-sm text-green-700">
             Are you an admin?{' '}
             <a href="/admin" className="font-medium text-green-600 hover:text-green-800 hover:underline">

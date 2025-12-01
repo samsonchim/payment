@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { loginAdmin } from '@/lib/actions';
 import { AppLogo } from '@/components/icons';
+import { FestiveDecor } from '@/components/festive-decor';
 import { Preloader } from '@/components/preloader';
 import { useSarcasticPopup } from '@/components/sarcastic-popup';
 
@@ -56,7 +57,9 @@ export default function AdminLoginPage() {
       {PopupComponent}
       <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-br from-green-50 to-white">
         <div className="w-full max-w-md">
-          <Card className="shadow-xl border-green-200">
+          <div className="relative">
+            <FestiveDecor />
+            <Card className="shadow-xl border-green-200">
             <CardHeader className="text-center bg-gradient-to-br from-green-50 to-white">
               <div className="mx-auto mb-4">
                 <AppLogo />
@@ -92,7 +95,8 @@ export default function AdminLoginPage() {
                 <SubmitButton />
               </form>
             </CardContent>
-          </Card>
+            </Card>
+          </div>
           <p className="mt-4 text-center text-sm text-green-700">
             Not an admin?{' '}
             <a href="/" className="font-medium text-green-600 hover:text-green-800 hover:underline">
