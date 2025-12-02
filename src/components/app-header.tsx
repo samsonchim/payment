@@ -7,6 +7,7 @@ import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { InstallPWA } from './install-pwa';
+import Image from 'next/image';
 
 interface AppHeaderProps {
   user?: { name: string; regNumber?: string };
@@ -30,7 +31,19 @@ export function AppHeader({ user, isAdmin }: AppHeaderProps) {
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href={isAdmin ? '/admin/dashboard' : '/dashboard'} className="flex items-center gap-2">
-            <AppLogo />
+            <div className="relative">
+              {/* Santa cap on top of logo */}
+              <div className="pointer-events-none absolute -top-6 -right-3 rotate-[20deg] z-10 w-[50px]">
+                <Image
+                  src="/holiday/santa-cap.png"
+                  alt="Santa cap"
+                  width={70}
+                  height={70}
+                  priority
+                />
+              </div>
+              <AppLogo />
+            </div>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
