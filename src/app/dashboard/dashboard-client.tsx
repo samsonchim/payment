@@ -577,9 +577,8 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                     </Alert>
 
                     <Button 
-                      className="w-full text-sm sm:text-base bg-orange-500 hover:bg-orange-600" 
-                      onClick={handleFlutterwavePayment} 
-                      disabled={isProcessing}
+                      className="w-full text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
+                      disabled
                     >
                       {isProcessing ? (
                         <>
@@ -590,6 +589,10 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                         `Pay ₦${totalAmount.toLocaleString()} with Flutterwave`
                       )}
                     </Button>
+
+                    <p className="text-center text-sm text-muted-foreground">
+                      Due some technical challenges, payments have been briefly suspended. Furthemore, we are working on it. check tomorow
+                    </p>
                 </div>
                 
                 {showDownload && receiptData && (

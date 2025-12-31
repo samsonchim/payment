@@ -98,9 +98,8 @@ export default function PayBalancePage() {
 
             {/* Payment Button */}
             <Button
-              onClick={handleFlutterwavePayment}
-              disabled={isProcessing}
-              className="w-full bg-orange-500 hover:bg-orange-600"
+              disabled
+              className="w-full bg-muted text-muted-foreground cursor-not-allowed"
               size="lg"
             >
               {isProcessing ? (
@@ -112,6 +111,10 @@ export default function PayBalancePage() {
                 'Pay ₦1,000 with Flutterwave'
               )}
             </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              Due some technical challenges, payments have been briefly suspended. Furthemore, we are working on it. check tomorow
+            </p>
 
             <div className="text-center text-sm text-muted-foreground">
               <p>Secure payment powered by Flutterwave</p>
