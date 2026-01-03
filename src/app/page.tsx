@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { loginStudent } from '@/lib/actions';
 import { AppLogo } from '@/components/icons';
-import { FestiveDecor } from '@/components/festive-decor';
 import { Preloader } from '@/components/preloader';
 import { useSarcasticPopup } from '@/components/sarcastic-popup';
 
@@ -65,7 +64,6 @@ export default function StudentLoginPage() {
             </p>
           </div>
           <div className="relative">
-            <FestiveDecor />
             <Card className="shadow-xl border-green-200">
             <CardHeader className="text-center bg-gradient-to-br from-green-50 to-white">
               <div className="mx-auto mb-4">
