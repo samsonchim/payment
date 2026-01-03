@@ -342,7 +342,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
     setCart(cart.filter(item => item.id !== bookId));
   };
 
-  const handleFlutterwavePayment = async () => {
+  const handlePaystackPayment = async () => {
     if (cart.length === 0) {
       showError('Your cart is empty!');
       return;
@@ -351,7 +351,7 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
     setIsProcessing(true);
 
     try {
-      const response = await fetch('/api/flutterwave/initialize', {
+      const response = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -359,14 +359,15 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
           textbooks: cart.map(b => ({ name: b.name, price: b.price })),
           email: `${student.regNumber}@student.com`,
           name: student.name,
-          regNumber: student.regNumber
+          regNumber: student.regNumber,
+          paymentType: 'textbooks'
         })
       });
 
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
-        // Redirect to Flutterwave payment page
+        // Redirect to Paystack payment page
         window.location.href = data.data.link;
       } else {
         showError(data.error || 'Failed to initialize payment');
@@ -576,9 +577,10 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                         </AlertDescription>
                     </Alert>
 
-                    <Button 
-                      className="w-full text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
-                      disabled
+                    <Button
+                      className="w-full text-sm sm:text-base bg-orange-500 hover:bg-orange-600"
+                      onClick={handlePaystackPayment}
+                      disabled={isProcessing}
                     >
                       {isProcessing ? (
                         <>
@@ -586,13 +588,9 @@ export function DashboardClient({ student, textbooks, transactions }: DashboardC
                           Processing...
                         </>
                       ) : (
-                        `Pay ₦${totalAmount.toLocaleString()} with Flutterwave`
+                        `Pay ₦${totalAmount.toLocaleString()} with Paystack`
                       )}
                     </Button>
-
-                    <p className="text-center text-sm text-muted-foreground">
-                      Due some technical challenges, payments have been briefly suspended. Furthemore, we are working on it. check tomorow
-                    </p>
                 </div>
                 
                 {showDownload && receiptData && (

@@ -12,11 +12,11 @@ export default function PayBalancePage() {
   const { showSuccess, showError, PopupComponent } = useSarcasticPopup();
   const router = useRouter();
 
-  const handleFlutterwavePayment = async () => {
+  const handlePaystackPayment = async () => {
     setIsProcessing(true);
 
     try {
-      const response = await fetch('/api/flutterwave/initialize', {
+      const response = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -32,7 +32,7 @@ export default function PayBalancePage() {
       const data = await response.json();
 
       if (response.ok && data.status === 'success') {
-        // Redirect to Flutterwave payment page
+        // Redirect to Paystack payment page
         window.location.href = data.data.link;
       } else {
         showError(data.error || 'Failed to initialize payment');
@@ -98,8 +98,9 @@ export default function PayBalancePage() {
 
             {/* Payment Button */}
             <Button
-              disabled
-              className="w-full bg-muted text-muted-foreground cursor-not-allowed"
+              onClick={handlePaystackPayment}
+              disabled={isProcessing}
+              className="w-full bg-orange-500 hover:bg-orange-600"
               size="lg"
             >
               {isProcessing ? (
@@ -108,13 +109,9 @@ export default function PayBalancePage() {
                   Processing...
                 </>
               ) : (
-                'Pay ₦1,000 with Flutterwave'
+                'Pay ₦1,000 with Paystack'
               )}
             </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Due some technical challenges, payments have been briefly suspended. Furthemore, we are working on it. check tomorow
-            </p>
 
             <div className="text-center text-sm text-muted-foreground">
               <p>Secure payment powered by Flutterwave</p>
